@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  parentId    String?
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  items       Item[]
+}
+
+model Item {
+  id                 String        @id @default(cuid())
+  code               String        @unique
+  name               String
+  description        String?
+  sn                 String?
+  model              String?
+  manufacturer       String?
+  categoryId         String
+  unit               String
+  quantity           Int           @default(0)
+  safetyStock        Int           @default(0)
+  position           String?
+  supplier           String?
+  price              Float?
+  warrantyStart      DateTime?
+  warrantyEnd        DateTime?
+  nandType           String?
+  compatibleProducts String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  category           Category      @relation(fields: [categoryId], references: [id])
+  transactions       Transaction[]
+  stockTakes         StockTake[]
+}
+
+enum TransactionType {
+  IN
+  OUT
+}
+
+model Transaction {
+  id            String          @id @default(cuid())
+  type          TransactionType
+  itemId        String
+  quantity      Int
+  reason        String?
+  relatedPerson String?
+  note          String?
+  batchId       String?
+  createdAt     DateTime @default(now())
+  item          Item     @relation(fields: [itemId], references: [id])
+}
+
+model StockTake {
+  id               String   @id @default(cuid())
+  itemId           String
+  expectedQuantity Int
+  actualQuantity   Int
+  difference       Int
+  note             String?
+  batchId          String
+  createdAt        DateTime @default(now())
+  item             Item     @relation(fields: [itemId], references: [id])
+}
