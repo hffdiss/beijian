@@ -31,6 +31,7 @@ interface Item {
   warrantyEnd: string | null;
   nandType: string | null;
   compatibleProducts: string | null;
+  bomCode: string | null;
 }
 
 interface Category {
@@ -233,6 +234,14 @@ export function ItemFormDialog({
           </TabsContent>
 
           <TabsContent value="other" className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">BBOM编码</label>
+              <Input
+                value={form.bomCode ?? ""}
+                onChange={(e) => update("bomCode", e.target.value)}
+                placeholder="可选，关联BOM主数据"
+              />
+            </div>
             <div>
               <label className="text-sm font-medium">备注</label>
               <Textarea

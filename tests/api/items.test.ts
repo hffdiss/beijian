@@ -31,6 +31,7 @@ beforeAll(async () => {
       position TEXT, supplier TEXT, price REAL,
       warrantyStart DATETIME, warrantyEnd DATETIME,
       nandType TEXT, compatibleProducts TEXT,
+      bomCode TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (categoryId) REFERENCES Category(id)

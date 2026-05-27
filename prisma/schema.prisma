@@ -7,6 +7,11 @@ datasource db {
   provider = "sqlite"
 }
 
+enum TransactionType {
+  IN
+  OUT
+}
+
 model Category {
   id          String     @id @default(cuid())
   name        String
@@ -17,6 +22,114 @@ model Category {
   parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryTree")
   items       Item[]
+}
+
+model Bom {
+  id                  String   @id @default(cuid())
+  bomCode             String   @unique
+  sbomCode            String?
+  category            String?
+  materialCategory    String?
+  materialSubcategory String?
+  name                String?
+  model               String?
+  subModel            String?
+  manufacturer        String?
+  manufacturerModel   String?
+  unit                String?
+  quantity            Int      @default(1)
+  nandType            String?
+  firmwareVersion     String?
+  lifecycle           String?
+  effectiveDate       DateTime?
+  expiryDate          DateTime?
+  supplier            String?
+  detailDescription   String?
+  processCode         String?
+  status              String?
+  isSpare             Boolean  @default(false)
+  remark              String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  parts               Part[]
+  items               Item[]
+}
+
+model Project {
+  id                 String    @id @default(cuid())
+  name               String    @unique
+  city               String?
+  contractNumber     String?
+  oem                String?
+  implementationDate DateTime?
+  warrantyStart      DateTime?
+  warrantyEnd        DateTime?
+  projectSla         String?
+  remark             String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  machines           Machine[]
+  parts              Part[]
+}
+
+model Machine {
+  id              String   @id @default(cuid())
+  machineSn       String   @unique
+  manufacturerSn  String?
+  product         String?
+  modelCode       String?
+  manufacturer    String?
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  parts           Part[]
+
+  @@index([projectId])
+}
+
+model Part {
+  id                        String    @id @default(cuid())
+  partSn                    String    @unique
+  bomCode                   String?
+  bom                       Bom?      @relation(fields: [bomCode], references: [bomCode])
+  machineId                 String?
+  machine                   Machine?  @relation(fields: [machineId], references: [id])
+  projectId                 String?
+  project                   Project?  @relation(fields: [projectId], references: [id])
+  description               String?
+  model                     String?
+  subModel                  String?
+  nandType                  String?
+  firmwareVersion           String?
+  equipmentCategory         String?
+  purchaseDate              DateTime?
+  projectWarrantyMonths     Int?
+  supplierWarrantyMonths    Int?
+  postStartupWarrantyMonths Float?
+  projectSla                String?
+  supplierSla               String?
+  supplier                  String?
+  failureRate               Float?
+  isSpare                   Boolean   @default(false)
+  spareResponsible          String?
+  spareQuantity             Int       @default(0)
+  spareWarehouse            String?
+  spareStrategy             String?
+  spareStatus               String?
+  monthGap                  Boolean?
+  gapMonths                 Float?
+  slaGap                    Boolean?
+  remark                    String?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  @@index([machineId])
+  @@index([projectId])
+  @@index([bomCode])
+  @@index([isSpare])
+  @@index([spareWarehouse])
+  @@index([spareStatus])
 }
 
 model Item {
@@ -38,16 +151,13 @@ model Item {
   warrantyEnd        DateTime?
   nandType           String?
   compatibleProducts String?
+  bomCode            String?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   category           Category      @relation(fields: [categoryId], references: [id])
+  bom                Bom?          @relation(fields: [bomCode], references: [bomCode])
   transactions       Transaction[]
   stockTakes         StockTake[]
-}
-
-enum TransactionType {
-  IN
-  OUT
 }
 
 model Transaction {
@@ -59,8 +169,8 @@ model Transaction {
   relatedPerson String?
   note          String?
   batchId       String?
-  createdAt     DateTime @default(now())
-  item          Item     @relation(fields: [itemId], references: [id])
+  createdAt     DateTime        @default(now())
+  item          Item            @relation(fields: [itemId], references: [id])
 }
 
 model StockTake {

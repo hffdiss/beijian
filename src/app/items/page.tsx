@@ -40,6 +40,7 @@ interface Item {
   warrantyEnd: string | null;
   nandType: string | null;
   compatibleProducts: string | null;
+  bomCode: string | null;
   category: Category;
 }
 

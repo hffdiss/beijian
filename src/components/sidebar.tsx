@@ -8,12 +8,16 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
   { href: "/", label: "仪表盘", icon: "📦" },
-  { href: "/items", label: "物料管理", icon: "📋" },
+  { href: "/projects", label: "项目管理", icon: "🏗️" },
+  { href: "/parts", label: "部件管理", icon: "🔧" },
+  { href: "/boms", label: "BOM管理", icon: "📋" },
+  { href: "/items", label: "物料管理", icon: "📦" },
   { href: "/transactions/in", label: "入库", icon: "📥" },
   { href: "/transactions/out", label: "出库", icon: "📤" },
   { href: "/transactions/history", label: "出入库记录", icon: "🔄" },
   { href: "/stocktake", label: "盘点", icon: "📊" },
   { href: "/categories", label: "分类管理", icon: "⚙️" },
+  { href: "/import", label: "数据导入", icon: "📄" },
 ];
 
 export function Sidebar() {
