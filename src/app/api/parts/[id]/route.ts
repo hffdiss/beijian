@@ -67,3 +67,16 @@ export async function PUT(
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  try {
+    await prisma.part.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "部件不存在" }, { status: 404 });
+  }
+}

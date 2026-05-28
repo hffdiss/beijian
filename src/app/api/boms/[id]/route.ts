@@ -74,9 +74,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const partsCount = await prisma.part.count({ where: { bomCode: id } });
-  if (partsCount > 0) {
-    return NextResponse.json({ error: "该BOM下有部件关联，不能删除" }, { status: 400 });
+  const bom = await prisma.bom.findUnique({ where: { id }, select: { bomCode: true } });
+  if (!bom) return NextResponse.json({ error: "BOM不存在" }, { status: 404 });
+
+  const partsCount = await prisma.part.count({ where: { bomCode: bom.bomCode } });
+  const itemsCount = await prisma.item.count({ where: { bomCode: bom.bomCode } });
+  if (partsCount > 0 || itemsCount > 0) {
+    return NextResponse.json({ error: "该BOM下有部件或物料关联，不能删除" }, { status: 400 });
   }
   try {
     await prisma.bom.delete({ where: { id } });

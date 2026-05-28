@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PartFormDialog } from "@/components/part-form-dialog";
 
 interface PartItem {
   id: string;
@@ -30,6 +31,7 @@ export default function PartsPage() {
   const [isSpare, setIsSpare] = useState("");
   const [equipmentCategory, setEquipmentCategory] = useState("");
   const [page, setPage] = useState(1);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const load = useCallback(async () => {
     const params = new URLSearchParams({ page: String(page), limit: "50" });
@@ -49,7 +51,10 @@ export default function PartsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">部件管理</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">部件管理</h1>
+        <Button onClick={() => setCreateOpen(true)}>新增部件</Button>
+      </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
         <Input
@@ -159,6 +164,8 @@ export default function PartsPage() {
           <Button variant="outline" size="sm" disabled={page * 50 >= data.total} onClick={() => setPage((p) => p + 1)}>下一页</Button>
         </div>
       )}
+
+      <PartFormDialog open={createOpen} onOpenChange={setCreateOpen} onSaved={load} />
     </div>
   );
 }

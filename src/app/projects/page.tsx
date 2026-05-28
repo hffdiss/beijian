@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ProjectFormDialog } from "@/components/project-form-dialog";
 
 interface Project {
   id: string;
@@ -21,6 +22,8 @@ interface Project {
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [q, setQ] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Project | null>(null);
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
@@ -35,6 +38,7 @@ export default function ProjectsPage() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">项目管理</h1>
+        <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>新增项目</Button>
       </div>
 
       <div className="flex gap-3 mb-4">
@@ -105,6 +109,8 @@ export default function ProjectsPage() {
       {projects.length === 0 && (
         <p className="text-center text-muted-foreground py-12">暂无项目</p>
       )}
+
+      <ProjectFormDialog open={dialogOpen} onOpenChange={setDialogOpen} project={editing} onSaved={load} />
     </div>
   );
 }

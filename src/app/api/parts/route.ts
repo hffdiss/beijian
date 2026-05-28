@@ -66,3 +66,34 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({ parts, total, page, limit });
 }
+
+export async function POST(request: Request) {
+  const data = await request.json();
+
+  if (!data.partSn) {
+    return NextResponse.json({ error: "部件SN不能为空" }, { status: 400 });
+  }
+
+  try {
+    const part = await prisma.part.create({
+      data: {
+        partSn: data.partSn,
+        description: data.description,
+        model: data.model,
+        equipmentCategory: data.equipmentCategory,
+        projectId: data.projectId || null,
+        machineId: data.machineId || null,
+        bomCode: data.bomCode || null,
+        spareStatus: data.spareStatus || null,
+        spareWarehouse: data.spareWarehouse || null,
+        spareQuantity: data.spareQuantity ?? 0,
+        isSpare: data.isSpare ?? false,
+      },
+      include: { project: { select: { name: true } }, machine: { select: { machineSn: true } }, bom: { select: { name: true } } },
+    });
+    return NextResponse.json(part, { status: 201 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "创建失败";
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
+}

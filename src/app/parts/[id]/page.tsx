@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,7 @@ interface BomOption { id: string; bomCode: string; name: string | null; }
 
 export default function PartDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [part, setPart] = useState<PartDetail | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -84,6 +85,15 @@ export default function PartDetailPage() {
     finally { setSaving(false); }
   };
 
+  const handleDelete = async () => {
+    if (!confirm("确定删除该部件？此操作不可撤销。")) return;
+    try {
+      const res = await fetch(`/api/parts/${id}`, { method: "DELETE" });
+      if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+      router.push("/parts");
+    } catch { alert("删除失败"); }
+  };
+
   if (!part) return <div className="p-6">加载中...</div>;
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString("zh-CN") : "-";
@@ -97,7 +107,10 @@ export default function PartDetailPage() {
         {part.spareStatus && <Badge variant={part.spareStatus === "NG" ? "destructive" : "secondary"}>{part.spareStatus}</Badge>}
         <div className="flex-1" />
         {!editing ? (
-          <Button variant="outline" onClick={() => setEditing(true)}>编辑</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setEditing(true)}>编辑</Button>
+            <Button variant="destructive" onClick={handleDelete}>删除</Button>
+          </div>
         ) : (
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setEditing(false)}>取消</Button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,11 +31,19 @@ interface BomDetail {
 
 export default function BomDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [bom, setBom] = useState<BomDetail | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
   const load = () => { fetch(`/api/boms/${id}`).then((r) => r.json()).then(setBom); };
   useEffect(() => { load(); }, [id]);
+
+  const handleDelete = async () => {
+    if (!confirm("确定删除该BOM？此操作不可撤销。")) return;
+    const res = await fetch(`/api/boms/${id}`, { method: "DELETE" });
+    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+    router.push("/boms");
+  };
 
   if (!bom) return <div className="p-6">加载中...</div>;
 
@@ -47,7 +55,10 @@ export default function BomDetailPage() {
         {bom.isSpare && <Badge>备件</Badge>}
         {bom.status && <Badge variant="outline">{bom.status}</Badge>}
         <div className="flex-1" />
-        <Button variant="outline" onClick={() => setEditOpen(true)}>编辑</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setEditOpen(true)}>编辑</Button>
+          <Button variant="destructive" onClick={handleDelete}>删除</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
