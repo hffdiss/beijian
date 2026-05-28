@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -42,12 +43,28 @@ interface Project {
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: "", city: "", contractNumber: "", oem: "", projectSla: "", remark: "" });
 
-  useEffect(() => {
-    fetch(`/api/projects/${id}`)
-      .then((r) => r.json())
-      .then(setProject);
-  }, [id]);
+  const load = () => {
+    fetch(`/api/projects/${id}`).then((r) => r.json()).then((data) => {
+      setProject(data);
+      setForm({ name: data.name ?? "", city: data.city ?? "", contractNumber: data.contractNumber ?? "", oem: data.oem ?? "", projectSla: data.projectSla ?? "", remark: data.remark ?? "" });
+    });
+  };
+  useEffect(() => { load(); }, [id]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/projects/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+      setEditing(false);
+      load();
+    } catch { alert("保存失败"); }
+    finally { setSaving(false); }
+  };
 
   if (!project) return <div className="p-6">加载中...</div>;
 
@@ -56,7 +73,32 @@ export default function ProjectDetailPage() {
       <div className="flex items-center gap-3 mb-6">
         <Link href="/projects"><Button variant="ghost" size="sm">&larr; 返回</Button></Link>
         <h1 className="text-2xl font-bold">{project.name}</h1>
+        <div className="flex-1" />
+        {!editing ? (
+          <Button variant="outline" onClick={() => setEditing(true)}>编辑</Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setEditing(false)}>取消</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? "保存中..." : "保存"}</Button>
+          </div>
+        )}
       </div>
+
+      {editing && (
+        <Card className="mb-6 border-primary/50">
+          <CardHeader><CardTitle className="text-base">编辑项目信息</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-sm font-medium">项目名称</label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div><label className="text-sm font-medium">城市</label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+              <div><label className="text-sm font-medium">合同号</label><Input value={form.contractNumber} onChange={(e) => setForm({ ...form, contractNumber: e.target.value })} /></div>
+              <div><label className="text-sm font-medium">OEM</label><Input value={form.oem} onChange={(e) => setForm({ ...form, oem: e.target.value })} /></div>
+              <div><label className="text-sm font-medium">项目SLA</label><Input value={form.projectSla} onChange={(e) => setForm({ ...form, projectSla: e.target.value })} /></div>
+              <div><label className="text-sm font-medium">备注</label><Input value={form.remark} onChange={(e) => setForm({ ...form, remark: e.target.value })} /></div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card>

@@ -31,16 +31,39 @@ export async function PUT(
     const part = await prisma.part.update({
       where: { id },
       data: {
-        spareStatus: data.spareStatus,
-        spareWarehouse: data.spareWarehouse,
-        spareQuantity: data.spareQuantity,
-        spareStrategy: data.spareStrategy,
+        projectId: data.projectId !== undefined ? data.projectId || null : undefined,
+        machineId: data.machineId !== undefined ? data.machineId || null : undefined,
+        bomCode: data.bomCode !== undefined ? data.bomCode || null : undefined,
+        description: data.description,
+        model: data.model,
+        subModel: data.subModel,
+        nandType: data.nandType,
+        firmwareVersion: data.firmwareVersion,
+        equipmentCategory: data.equipmentCategory,
+        purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : data.purchaseDate === null ? null : undefined,
+        projectWarrantyMonths: data.projectWarrantyMonths,
+        supplierWarrantyMonths: data.supplierWarrantyMonths,
+        postStartupWarrantyMonths: data.postStartupWarrantyMonths,
+        projectSla: data.projectSla,
+        supplierSla: data.supplierSla,
+        supplier: data.supplier,
+        failureRate: data.failureRate,
+        isSpare: data.isSpare,
         spareResponsible: data.spareResponsible,
+        spareQuantity: data.spareQuantity,
+        spareWarehouse: data.spareWarehouse,
+        spareStrategy: data.spareStrategy,
+        spareStatus: data.spareStatus,
+        monthGap: data.monthGap,
+        gapMonths: data.gapMonths,
+        slaGap: data.slaGap,
         remark: data.remark,
       },
+      include: { project: { select: { name: true } }, machine: { select: { machineSn: true } }, bom: { select: { bomCode: true } } },
     });
     return NextResponse.json(part);
-  } catch {
-    return NextResponse.json({ error: "部件不存在或更新失败" }, { status: 400 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "更新失败";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BomFormDialog } from "@/components/bom-form-dialog";
 
 interface Part {
   id: string; partSn: string; description: string | null;
@@ -31,10 +32,10 @@ interface BomDetail {
 export default function BomDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [bom, setBom] = useState<BomDetail | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
-  useEffect(() => {
-    fetch(`/api/boms/${id}`).then((r) => r.json()).then(setBom);
-  }, [id]);
+  const load = () => { fetch(`/api/boms/${id}`).then((r) => r.json()).then(setBom); };
+  useEffect(() => { load(); }, [id]);
 
   if (!bom) return <div className="p-6">加载中...</div>;
 
@@ -45,6 +46,8 @@ export default function BomDetailPage() {
         <h1 className="text-2xl font-bold font-mono">{bom.bomCode}</h1>
         {bom.isSpare && <Badge>备件</Badge>}
         {bom.status && <Badge variant="outline">{bom.status}</Badge>}
+        <div className="flex-1" />
+        <Button variant="outline" onClick={() => setEditOpen(true)}>编辑</Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -126,6 +129,8 @@ export default function BomDetailPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <BomFormDialog open={editOpen} onOpenChange={setEditOpen} bom={bom} onSaved={load} />
     </div>
   );
 }
