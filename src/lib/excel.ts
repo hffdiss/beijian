@@ -60,30 +60,30 @@ export async function importFromXlsx(
       const bomCode = strVal(r[2]);
       if (!bomCode) continue;
       try {
+        const bomData = {
+          sbomCode: strVal(r[1]) || null,
+          materialCategory: strVal(r[6]).replace(/^_/, "") || null,
+          materialSubcategory: strVal(r[7]).replace(/^\d+/, "").trim() || null,
+          model: strVal(r[8]) || null,
+          name: strVal(r[9]) || null,
+          unit: strVal(r[10]) || null,
+          quantity: parseInt(String(r[11])) || 1,
+          lifecycle: strVal(r[12]) || null,
+          effectiveDate: parseDate(r[13]),
+          expiryDate: parseDate(r[14]),
+          isSpare: strVal(r[15]) === "是",
+          detailDescription: strVal(r[16]) || null,
+          manufacturer: strVal(r[17]) || null,
+          manufacturerModel: strVal(r[18]) || null,
+          supplier: strVal(r[19]) || null,
+          processCode: strVal(r[20]) || null,
+          status: strVal(r[5]) || null,
+          remark: strVal(r[21]) || null,
+        };
         await prisma.bom.upsert({
           where: { bomCode },
-          create: {
-            bomCode,
-            sbomCode: strVal(r[1]) || null,
-            materialCategory: strVal(r[6]).replace(/^_/, "") || null,
-            materialSubcategory: strVal(r[7]).replace(/^\d+/, "").trim() || null,
-            model: strVal(r[8]) || null,
-            name: strVal(r[9]) || null,
-            unit: strVal(r[10]) || null,
-            quantity: parseInt(String(r[11])) || 1,
-            lifecycle: strVal(r[12]) || null,
-            effectiveDate: parseDate(r[13]),
-            expiryDate: parseDate(r[14]),
-            isSpare: strVal(r[15]) === "是",
-            detailDescription: strVal(r[16]) || null,
-            manufacturer: strVal(r[17]) || null,
-            manufacturerModel: strVal(r[18]) || null,
-            supplier: strVal(r[19]) || null,
-            processCode: strVal(r[20]) || null,
-            status: strVal(r[5]) || null,
-            remark: strVal(r[21]) || null,
-          },
-          update: {},
+          create: { bomCode, ...bomData },
+          update: bomData,
         });
         result.boms++;
       } catch (e) {
@@ -115,20 +115,20 @@ export async function importFromXlsx(
   }
 
   for (const [name, info] of projectMap) {
+    const projectData = {
+      city: info.city || null,
+      contractNumber: info.contractNumber || null,
+      oem: info.oem || null,
+      implementationDate: info.implDate,
+      warrantyStart: info.warrantyStart,
+      warrantyEnd: info.warrantyEnd,
+      projectSla: info.projectSla || null,
+    };
     try {
       await prisma.project.upsert({
         where: { name },
-        create: {
-          name,
-          city: info.city || null,
-          contractNumber: info.contractNumber || null,
-          oem: info.oem || null,
-          implementationDate: info.implDate,
-          warrantyStart: info.warrantyStart,
-          warrantyEnd: info.warrantyEnd,
-          projectSla: info.projectSla || null,
-        },
-        update: {},
+        create: { name, ...projectData },
+        update: projectData,
       });
       result.projects++;
     } catch (e) {
@@ -152,18 +152,30 @@ export async function importFromXlsx(
   }
 
   for (const [sn, info] of machineMap) {
+    const machineData = {
+      manufacturerSn: info.manufacturerSn || null,
+      product: info.product || null,
+      modelCode: info.modelCode || null,
+      manufacturer: info.manufacturer || null,
+      projectId: undefined as string | undefined,
+    };
     try {
       await prisma.machine.upsert({
         where: { machineSn: sn },
         create: {
           machineSn: sn,
-          manufacturerSn: info.manufacturerSn || null,
-          product: info.product || null,
-          modelCode: info.modelCode || null,
-          manufacturer: info.manufacturer || null,
+          manufacturerSn: machineData.manufacturerSn,
+          product: machineData.product,
+          modelCode: machineData.modelCode,
+          manufacturer: machineData.manufacturer,
           project: { connect: { name: info.projectName } },
         },
-        update: {},
+        update: {
+          manufacturerSn: machineData.manufacturerSn,
+          product: machineData.product,
+          modelCode: machineData.modelCode,
+          manufacturer: machineData.manufacturer,
+        },
       });
       result.machines++;
     } catch (e) {
@@ -205,40 +217,40 @@ export async function importFromXlsx(
     const machineSn = strVal(r[7]);
     const bomCode = strVal(r[10]);
 
+    const partData = {
+      projectId: projectName ? projectIdBy.get(projectName) ?? null : null,
+      machineId: machineSn ? machineIdBy.get(machineSn) ?? null : null,
+      bomCode: bomCode || null,
+      description: strVal(r[13]) || null,
+      model: strVal(r[15]) || null,
+      subModel: strVal(r[16]) || null,
+      nandType: strVal(r[17]) || null,
+      firmwareVersion: strVal(r[18]) || null,
+      equipmentCategory: strVal(r[11]) || null,
+      purchaseDate: parseDate(r[9]),
+      projectWarrantyMonths: intVal(r[23]),
+      supplierWarrantyMonths: intVal(r[24]),
+      postStartupWarrantyMonths: floatVal(r[25]),
+      projectSla: strVal(r[26]) || null,
+      supplierSla: strVal(r[27]) || null,
+      supplier: strVal(r[22]) || null,
+      failureRate: floatVal(r[12]),
+      isSpare: boolVal(r[28]),
+      spareResponsible: strVal(r[32]) || null,
+      spareQuantity: intVal(r[33]) ?? 0,
+      spareWarehouse: strVal(r[34]) || null,
+      spareStrategy: strVal(r[35]) || null,
+      spareStatus: strVal(r[36]) || null,
+      monthGap: strVal(r[29]) === "是" ? true : strVal(r[29]) === "否" ? false : null,
+      gapMonths: floatVal(r[30]),
+      slaGap: strVal(r[31]) === "是" ? true : strVal(r[31]) === "否" ? false : null,
+      remark: strVal(r[37]) || null,
+    };
     try {
       await prisma.part.upsert({
         where: { partSn },
-        create: {
-          partSn,
-          projectId: projectName ? projectIdBy.get(projectName) ?? null : null,
-          machineId: machineSn ? machineIdBy.get(machineSn) ?? null : null,
-          bomCode: bomCode || null,
-          description: strVal(r[13]) || null,
-          model: strVal(r[15]) || null,
-          subModel: strVal(r[16]) || null,
-          nandType: strVal(r[17]) || null,
-          firmwareVersion: strVal(r[18]) || null,
-          equipmentCategory: strVal(r[11]) || null,
-          purchaseDate: parseDate(r[9]),
-          projectWarrantyMonths: intVal(r[23]),
-          supplierWarrantyMonths: intVal(r[24]),
-          postStartupWarrantyMonths: floatVal(r[25]),
-          projectSla: strVal(r[26]) || null,
-          supplierSla: strVal(r[27]) || null,
-          supplier: strVal(r[22]) || null,
-          failureRate: floatVal(r[12]),
-          isSpare: boolVal(r[28]),
-          spareResponsible: strVal(r[32]) || null,
-          spareQuantity: intVal(r[33]) ?? 0,
-          spareWarehouse: strVal(r[34]) || null,
-          spareStrategy: strVal(r[35]) || null,
-          spareStatus: strVal(r[36]) || null,
-          monthGap: strVal(r[29]) === "是" ? true : strVal(r[29]) === "否" ? false : null,
-          gapMonths: floatVal(r[30]),
-          slaGap: strVal(r[31]) === "是" ? true : strVal(r[31]) === "否" ? false : null,
-          remark: strVal(r[37]) || null,
-        },
-        update: {},
+        create: { partSn, ...partData },
+        update: partData,
       });
       count++;
     } catch (e) {
