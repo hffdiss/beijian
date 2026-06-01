@@ -89,7 +89,7 @@ export default function ItemDetailPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/items">
           <Button variant="ghost" size="sm">&larr; 返回</Button>

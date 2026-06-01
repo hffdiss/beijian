@@ -102,7 +102,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
+    <div className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">用户设置</h1>
 
       <Tabs defaultValue="password">

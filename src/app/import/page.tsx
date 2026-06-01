@@ -33,7 +33,7 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">数据导入</h1>
 
       <Card className="mb-6">
