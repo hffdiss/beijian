@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-const navItems = [
+const baseNavItems = [
   { href: "/", label: "仪表盘", icon: "📦" },
   { href: "/projects", label: "项目管理", icon: "🏗️" },
   { href: "/parts", label: "部件管理", icon: "🔧" },
@@ -16,16 +16,16 @@ const navItems = [
   { href: "/transactions/out", label: "出库", icon: "📤" },
   { href: "/transactions/history", label: "出入库记录", icon: "🔄" },
   { href: "/stocktake", label: "盘点", icon: "📊" },
-  { href: "/categories", label: "分类管理", icon: "⚙️" },
+  { href: "/categories", label: "分类管理", icon: "🗂️" },
   { href: "/import", label: "数据导入", icon: "📄" },
-  { href: "/settings", label: "用户设置", icon: "⚙️" },
+  { href: "/settings", label: "用户设置", icon: "👤" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; role: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -38,6 +38,10 @@ export function Sidebar() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   };
+
+  const navItems = user?.role === "admin"
+    ? [...baseNavItems, { href: "/admin/users", label: "用户管理", icon: "👥" }]
+    : baseNavItems;
 
   const NavLinks = () => (
     <nav className="space-y-1">
