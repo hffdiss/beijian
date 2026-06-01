@@ -6,14 +6,14 @@ async function seed() {
   const adapter = new PrismaBetterSqlite3({ url: "file:./prisma/dev.db" });
   const prisma = new PrismaClient({ adapter });
 
-  const passwordHash = await hash("password", 12);
+  const passwordHash = await hash("admin123", 12);
   const existing = await prisma.user.findUnique({ where: { username: "admin" } });
   if (existing) {
     await prisma.user.update({
       where: { username: "admin" },
       data: { passwordHash, role: "admin", passwordChanged: false },
     });
-    console.log("✓ Admin user reset to default (admin / password)");
+    console.log("✓ Admin user reset to default (admin / admin123)");
   } else {
     await prisma.user.create({
       data: {
@@ -23,7 +23,7 @@ async function seed() {
         passwordChanged: false,
       },
     });
-    console.log("✓ Default admin user created (admin / password)");
+    console.log("✓ Default admin user created (admin / admin123)");
   }
   await prisma.$disconnect();
 }
