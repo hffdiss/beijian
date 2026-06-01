@@ -19,10 +19,17 @@ export async function POST(request: Request) {
   }
 
   const passwordHash = await hashPassword(password);
-  const user = await prisma.user.create({ data: { username, passwordHash } });
+  const user = await prisma.user.create({
+    data: { username, passwordHash, role: "user", passwordChanged: true },
+  });
 
-  const token = await createToken(user.id, user.username);
+  const token = await createToken({
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    passwordChanged: true,
+  });
   await setAuthCookie(token);
 
-  return NextResponse.json({ user: { id: user.id, username: user.username } }, { status: 201 });
+  return NextResponse.json({ user: { id: user.id, username: user.username, role: user.role } }, { status: 201 });
 }

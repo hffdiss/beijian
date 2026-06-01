@@ -32,7 +32,12 @@ export default function LoginPage() {
         setError(data.error ?? "登录失败");
         return;
       }
-      router.push(redirect);
+      const data = await res.json();
+      if (!data.passwordChanged) {
+        router.push("/settings");
+      } else {
+        router.push(redirect);
+      }
     } catch {
       setError("网络错误");
     } finally {

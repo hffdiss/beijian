@@ -19,8 +19,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "用户名或密码错误" }, { status: 401 });
   }
 
-  const token = await createToken(user.id, user.username);
+  const token = await createToken({
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    passwordChanged: user.passwordChanged,
+  });
   await setAuthCookie(token);
 
-  return NextResponse.json({ user: { id: user.id, username: user.username } });
+  return NextResponse.json({
+    user: { id: user.id, username: user.username, role: user.role },
+    passwordChanged: user.passwordChanged,
+  });
 }

@@ -13,6 +13,14 @@ const PUBLIC_PATHS = [
   "/api/auth/me",
 ];
 
+const PASSWORD_BYPASS_PATHS = [
+  "/settings",
+  "/api/auth/change-password",
+  "/api/auth/update-profile",
+  "/api/auth/logout",
+  "/api/auth/me",
+];
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -33,7 +41,6 @@ export async function proxy(request: NextRequest) {
   // Check auth cookie
   const token = request.cookies.get("beijian_token")?.value;
   if (!token) {
-    // Redirect API calls to 401, page requests to /login
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
@@ -43,10 +50,26 @@ export async function proxy(request: NextRequest) {
   }
 
   try {
-    await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+
+    // Force password change on first login
+    if (payload.passwordChanged === false) {
+      const isBypassPath = PASSWORD_BYPASS_PATHS.some((p) =>
+        pathname.startsWith(p)
+      );
+      if (!isBypassPath) {
+        if (pathname.startsWith("/api/")) {
+          return NextResponse.json(
+            { error: "请先修改默认密码", mustChangePassword: true },
+            { status: 403 }
+          );
+        }
+        return NextResponse.redirect(new URL("/settings", request.url));
+      }
+    }
+
     return NextResponse.next();
   } catch {
-    // Token expired or invalid
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "登录已过期" }, { status: 401 });
     }

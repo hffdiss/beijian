@@ -7,6 +7,13 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 const COOKIE_NAME = "beijian_token";
 
+export interface AuthUser {
+  sub: string;
+  username: string;
+  role: string;
+  passwordChanged: boolean;
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return hash(password, 12);
 }
@@ -15,17 +22,32 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return compare(password, hash);
 }
 
-export async function createToken(userId: string, username: string): Promise<string> {
-  return new SignJWT({ sub: userId, username })
+export async function createToken(user: {
+  id: string;
+  username: string;
+  role: string;
+  passwordChanged: boolean;
+}): Promise<string> {
+  return new SignJWT({
+    sub: user.id,
+    username: user.username,
+    role: user.role,
+    passwordChanged: user.passwordChanged,
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("7d")
     .sign(JWT_SECRET);
 }
 
-export async function verifyToken(token: string): Promise<{ sub: string; username: string } | null> {
+export async function verifyToken(token: string): Promise<AuthUser | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return { sub: payload.sub as string, username: payload.username as string };
+    return {
+      sub: payload.sub as string,
+      username: payload.username as string,
+      role: (payload.role as string) ?? "user",
+      passwordChanged: (payload.passwordChanged as boolean) ?? true,
+    };
   } catch {
     return null;
   }
@@ -40,10 +62,10 @@ export async function setAuthCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: false, // set true in production with HTTPS
+    secure: false,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7,
   });
 }
 
@@ -52,7 +74,7 @@ export async function clearAuthCookie(): Promise<void> {
   cookieStore.delete(COOKIE_NAME);
 }
 
-export async function getCurrentUser(): Promise<{ sub: string; username: string } | null> {
+export async function getCurrentUser(): Promise<AuthUser | null> {
   const token = await getAuthCookie();
   if (!token) return null;
   return verifyToken(token);
