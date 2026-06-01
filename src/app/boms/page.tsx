@@ -26,18 +26,32 @@ interface BomItem {
 export default function BomsPage() {
   const [data, setData] = useState<{ boms: BomItem[]; total: number }>({ boms: [], total: 0 });
   const [q, setQ] = useState("");
+  const [materialCategory, setMaterialCategory] = useState("");
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BomItem | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const load = useCallback(async () => {
     const params = new URLSearchParams({ page: String(page), limit: "50" });
     if (q) params.set("q", q);
+    if (materialCategory) params.set("materialCategory", materialCategory);
     const res = await fetch(`/api/boms?${params}`);
     setData(await res.json());
-  }, [q, page]);
+  }, [q, materialCategory, page]);
 
-  useEffect(() => { load(); }, [load]);
+  const handleSearch = () => {
+    setHasSearched(true);
+    setPage(1);
+    load();
+  };
+
+  useEffect(() => {
+    if (hasSearched) {
+      const timer = setTimeout(() => { load(); }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [load, hasSearched]);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -48,15 +62,23 @@ export default function BomsPage() {
 
       <div className="flex gap-3 mb-4">
         <Input
-          placeholder="搜索BBOM编码/名称/型号..."
+          placeholder="输入关键词后按回车搜索..."
           value={q}
           onChange={(e) => { setQ(e.target.value); setPage(1); }}
-          onKeyDown={(e) => e.key === "Enter" && load()}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="max-w-sm"
         />
-        <Button variant="secondary" onClick={load}>搜索</Button>
+        <Button variant="secondary" onClick={handleSearch}>搜索</Button>
       </div>
 
+      {!hasSearched ? (
+        <div className="text-center py-16 text-muted-foreground">
+          <p className="text-4xl mb-4">🔍</p>
+          <p className="text-lg font-medium mb-2">输入搜索条件开始查询</p>
+          <p className="text-sm">支持 BBOM编码、名称、型号、厂商 等多词组合搜索</p>
+        </div>
+      ) : (
+        <>
       <div className="hidden md:block">
         <Table>
           <TableHeader>
@@ -117,6 +139,8 @@ export default function BomsPage() {
         </div>
       )}
 
+        </>
+      )}
       <BomFormDialog open={dialogOpen} onOpenChange={setDialogOpen} bom={editing} onSaved={load} />
     </div>
   );

@@ -4,17 +4,32 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";
+  const materialCategory = searchParams.get("materialCategory") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "50");
 
   const where: Record<string, unknown> = {};
   if (q) {
-    where.OR = [
-      { bomCode: { contains: q } },
-      { name: { contains: q } },
-      { model: { contains: q } },
-    ];
+    const terms = q.trim().split(/\s+/).filter((t) => t.length > 0);
+    if (terms.length > 0) {
+      where.AND = terms.map((term) => ({
+        OR: [
+          { bomCode: { contains: term } },
+          { sbomCode: { contains: term } },
+          { name: { contains: term } },
+          { model: { contains: term } },
+          { manufacturer: { contains: term } },
+          { manufacturerModel: { contains: term } },
+          { materialCategory: { contains: term } },
+          { materialSubcategory: { contains: term } },
+          { category: { contains: term } },
+          { supplier: { contains: term } },
+          { detailDescription: { contains: term } },
+        ],
+      }));
+    }
   }
+  if (materialCategory) where.materialCategory = materialCategory;
 
   const [boms, total] = await Promise.all([
     prisma.bom.findMany({
