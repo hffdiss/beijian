@@ -32,6 +32,9 @@ export default function PartsPage() {
   const [equipmentCategory, setEquipmentCategory] = useState("");
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const hasActiveFilter = q || spareStatus || spareWarehouse || isSpare || equipmentCategory;
 
   const load = useCallback(async () => {
     const params = new URLSearchParams({ page: String(page), limit: "50" });
@@ -44,10 +47,18 @@ export default function PartsPage() {
     setData(await res.json());
   }, [q, spareStatus, spareWarehouse, isSpare, equipmentCategory, page]);
 
+  const handleSearch = () => {
+    setHasSearched(true);
+    setPage(1);
+    load();
+  };
+
   useEffect(() => {
-    const timer = setTimeout(() => { load(); }, 300);
-    return () => clearTimeout(timer);
-  }, [load]);
+    if (hasSearched) {
+      const timer = setTimeout(() => { load(); }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [load, hasSearched]);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -58,12 +69,13 @@ export default function PartsPage() {
 
       <div className="flex flex-wrap gap-3 mb-4">
         <Input
-          placeholder="多词搜索: SN/描述/型号/项目/机器..."
+          placeholder="输入关键词后按回车搜索..."
           value={q}
-          onChange={(e) => { setQ(e.target.value); setPage(1); }}
+          onChange={(e) => { setQ(e.target.value); setPage(1); setHasSearched(true); }}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="max-w-sm"
         />
-        <Select value={equipmentCategory || "null"} onValueChange={(v) => { setEquipmentCategory(!v || v === "null" ? "" : v); setPage(1); }}>
+        <Select value={equipmentCategory || "null"} onValueChange={(v) => { setEquipmentCategory(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="类别" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="null">全部类别</SelectItem>
@@ -80,7 +92,7 @@ export default function PartsPage() {
             <SelectItem value="线缆">线缆</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={spareStatus || "null"} onValueChange={(v) => { setSpareStatus(!v || v === "null" ? "" : v); setPage(1); }}>
+        <Select value={spareStatus || "null"} onValueChange={(v) => { setSpareStatus(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="备件状态" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="null">全部状态</SelectItem>
@@ -90,7 +102,7 @@ export default function PartsPage() {
             <SelectItem value="不涉及">不涉及</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={spareWarehouse || "null"} onValueChange={(v) => { setSpareWarehouse(!v || v === "null" ? "" : v); setPage(1); }}>
+        <Select value={spareWarehouse || "null"} onValueChange={(v) => { setSpareWarehouse(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="备件库房" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="null">全部库房</SelectItem>
@@ -98,7 +110,7 @@ export default function PartsPage() {
             <SelectItem value="现场备件">现场备件</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={isSpare || "null"} onValueChange={(v) => { setIsSpare(!v || v === "null" ? "" : v); setPage(1); }}>
+        <Select value={isSpare || "null"} onValueChange={(v) => { setIsSpare(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}>
           <SelectTrigger className="w-32"><SelectValue placeholder="是否备件" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="null">全部</SelectItem>
@@ -106,9 +118,17 @@ export default function PartsPage() {
             <SelectItem value="false">否</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="secondary" onClick={load}>搜索</Button>
+        <Button variant="secondary" onClick={handleSearch}>搜索</Button>
       </div>
 
+      {!hasSearched ? (
+        <div className="text-center py-16 text-muted-foreground">
+          <p className="text-4xl mb-4">🔍</p>
+          <p className="text-lg font-medium mb-2">输入搜索条件开始查询</p>
+          <p className="text-sm">支持 SN、描述、型号、项目名、机器SN 等多词组合搜索，也可按类别、备件状态筛选</p>
+        </div>
+      ) : (
+        <>
       <div className="hidden md:block">
         <Table>
           <TableHeader>
@@ -165,6 +185,8 @@ export default function PartsPage() {
         </div>
       )}
 
+        </>
+      )}
       <PartFormDialog open={createOpen} onOpenChange={setCreateOpen} onSaved={load} />
     </div>
   );
