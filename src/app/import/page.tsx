@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 interface ImportResult {
   projects: number;
@@ -17,8 +18,11 @@ interface ImportResult {
 export default function ImportPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   const handleImport = async () => {
+    setConfirmOpen(false);
     setLoading(true);
     setResult(null);
     try {
@@ -42,12 +46,34 @@ export default function ImportPage() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm mb-4">
-            将从当前目录下的 beijian.xlsx 文件中导入"新增BOM"和"发货项目清单"两个工作表的数据。
-            导入使用 upsert 策略，重复数据将被跳过。
+            将从项目目录下的 <code className="bg-muted px-1 py-0.5 rounded text-xs">beijian.xlsx</code> 文件中导入两个工作表的数据：
           </p>
-          <Button onClick={handleImport} disabled={loading}>
-            {loading ? "导入中..." : "开始导入"}
-          </Button>
+          <ul className="text-sm text-muted-foreground mb-4 space-y-1 ml-4 list-disc">
+            <li><strong>新增BOM</strong> — BOM 主数据（编码、物料分类、型号等）</li>
+            <li><strong>发货项目清单(含BBOM SN)</strong> — 项目、机器、部件 SN 级记录</li>
+          </ul>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-amber-800">
+              ⚠️ 导入将覆盖已有数据。已存在的项目、机器、BOM 和部件会被 Excel 中的最新数据更新。
+              此操作不可撤销，请确认后再执行。
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(e) => setConfirmed(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300"
+              />
+              我已确认，了解此操作将覆盖现有数据
+            </label>
+          </div>
+          <div className="mt-4">
+            <Button onClick={() => setConfirmOpen(true)} disabled={loading || !confirmed}>
+              {loading ? "导入中..." : "开始导入"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -110,6 +136,28 @@ export default function ImportPage() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>确认导入</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>即将从 <code className="bg-muted px-1 py-0.5 rounded text-xs">beijian.xlsx</code> 执行数据导入：</p>
+            <ul className="space-y-1 ml-4 list-disc text-muted-foreground">
+              <li>Sheet「新增BOM」→ BOM 主数据</li>
+              <li>Sheet「发货项目清单」→ 项目 / 机器 / 部件</li>
+            </ul>
+            <p className="text-amber-600 font-medium">
+              已存在的记录将被 Excel 中的最新数据覆盖更新。
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>取消</Button>
+            <Button onClick={handleImport}>确认导入</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
