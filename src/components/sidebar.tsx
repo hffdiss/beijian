@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -22,7 +22,21 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<{ username: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.user) setUser(data.user); })
+      .catch(() => {});
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  };
 
   const NavLinks = () => (
     <nav className="space-y-1">
@@ -63,6 +77,19 @@ export function Sidebar() {
             <span>📄</span> 导出 CSV
           </a>
         </div>
+        {user && (
+          <div className="border-t p-3">
+            <div className="flex items-center justify-between px-3 py-2">
+              <div className="flex items-center gap-2 text-sm">
+                <span>👤</span>
+                <span className="font-medium">{user.username}</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-xs">
+                退出
+              </Button>
+            </div>
+          </div>
+        )}
       </aside>
 
       {/* 手机端底部导航 + 抽屉 */}
@@ -97,6 +124,19 @@ export function Sidebar() {
                   <span>📄</span> 导出 CSV
                 </a>
               </div>
+              {user && (
+                <div className="border-t mt-3 pt-3">
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span>👤</span>
+                      <span className="font-medium">{user.username}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={handleLogout} className="text-xs">
+                      退出
+                    </Button>
+                  </div>
+                </div>
+              )}
             </SheetContent>
           </Sheet>
         </div>
