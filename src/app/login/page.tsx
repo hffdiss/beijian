@@ -64,22 +64,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">备品备件管理系统</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-muted/50 to-background p-4">
+      <Card className="w-full max-w-sm shadow-lg">
+        <CardHeader className="text-center pb-2">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
+            <span className="text-3xl">📦</span>
+          </div>
+          <CardTitle className="text-xl">备品备件管理系统</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">请登录以继续</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <Tabs defaultValue="login">
-            <TabsList className="w-full mb-6">
+            <TabsList className="w-full mb-5">
               <TabsTrigger value="login" className="flex-1">登录</TabsTrigger>
               <TabsTrigger value="register" className="flex-1">注册</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
-                <div>
+                <div className="space-y-1.5">
                   <label className="text-sm font-medium">用户名</label>
                   <Input
                     value={username}
@@ -89,7 +92,7 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <label className="text-sm font-medium">密码</label>
                   <Input
                     type="password"
@@ -99,8 +102,8 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={loading || !username || !password}>
+                {error && <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</p>}
+                <Button type="submit" className="w-full" size="lg" disabled={loading || !username || !password}>
                   {loading ? "登录中..." : "登录"}
                 </Button>
               </form>
@@ -108,7 +111,7 @@ export default function LoginPage() {
 
             <TabsContent value="register">
               <form onSubmit={handleRegister} className="space-y-4">
-                <div>
+                <div className="space-y-1.5">
                   <label className="text-sm font-medium">用户名</label>
                   <Input
                     value={username}
@@ -117,7 +120,7 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <label className="text-sm font-medium">密码</label>
                   <Input
                     type="password"
@@ -127,8 +130,8 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={loading || !username || !password}>
+                {error && <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</p>}
+                <Button type="submit" className="w-full" size="lg" disabled={loading || !username || !password}>
                   {loading ? "注册中..." : "注册并登录"}
                 </Button>
               </form>
