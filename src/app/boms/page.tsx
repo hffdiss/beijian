@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BomFormDialog } from "@/components/bom-form-dialog";
 import { Pagination } from "@/components/pagination";
+import { Breadcrumb } from "@/components/breadcrumb";
+import { TableSkeleton } from "@/components/skeleton";
 
 interface BomItem {
   id: string;
@@ -30,33 +32,43 @@ export default function BomsPage() {
   const [q, setQ] = useState("");
   const [materialCategory, setMaterialCategory] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BomItem | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const params = new URLSearchParams({ page: String(page), limit: "50" });
+    setLoading(true);
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (q) params.set("q", q);
     if (materialCategory) params.set("materialCategory", materialCategory);
     const res = await fetch(`/api/boms?${params}`);
     setData(await res.json());
-  }, [q, materialCategory, page]);
+    setLoading(false);
+  }, [q, materialCategory, page, limit]);
 
   const handleSearch = () => {
-    setHasSearched(true);
     setPage(1);
     load();
   };
 
   useEffect(() => {
-    if (hasSearched) {
-      const timer = setTimeout(() => { load(); }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [load, hasSearched]);
+    const timer = setTimeout(() => { load(); }, 300);
+    return () => clearTimeout(timer);
+  }, [load]);
+
+  const handleDelete = async (bom: BomItem) => {
+    if (!confirm(`确定删除 "${bom.bomCode}"？`)) return;
+    const res = await fetch(`/api/boms/${bom.id}`, { method: "DELETE" });
+    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+    load();
+  };
+
+  const totalPages = Math.ceil(data.total / limit);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      <Breadcrumb items={[{ label: "BOM管理" }]} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">BOM管理</h1>
         <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>新增BOM</Button>
@@ -64,7 +76,7 @@ export default function BomsPage() {
 
       <div className="flex gap-3 mb-4">
         <Input
-          placeholder="输入关键词后按回车搜索..."
+          placeholder="输入关键词搜索（BBOM/名称/型号/厂商）..."
           value={q}
           onChange={(e) => { setQ(e.target.value); setPage(1); }}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -72,7 +84,7 @@ export default function BomsPage() {
         />
         <Select
           value={materialCategory || "null"}
-          onValueChange={(v) => { setMaterialCategory(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}
+          onValueChange={(v) => { setMaterialCategory(!v || v === "null" ? "" : v); setPage(1); }}
         >
           <SelectTrigger className="w-44">
             <SelectValue placeholder="物料类别" />
@@ -92,73 +104,87 @@ export default function BomsPage() {
         <Button variant="secondary" onClick={handleSearch}>搜索</Button>
       </div>
 
-      {!hasSearched ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-4xl mb-4">🔍</p>
-          <p className="text-lg font-medium mb-2">输入搜索条件开始查询</p>
-          <p className="text-sm">支持 BBOM编码、名称、型号、厂商 等多词组合搜索</p>
-        </div>
+      {loading ? (
+        <TableSkeleton rows={limit > 10 ? 10 : limit} cols={9} />
       ) : (
         <>
-      <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>BBOM编码</TableHead>
-              <TableHead>名称</TableHead>
-              <TableHead>型号</TableHead>
-              <TableHead>物料类别</TableHead>
-              <TableHead>厂商</TableHead>
-              <TableHead>单位</TableHead>
-              <TableHead>状态</TableHead>
-              <TableHead>部件数</TableHead>
-              <TableHead>操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>BBOM编码</TableHead>
+                  <TableHead>名称</TableHead>
+                  <TableHead>型号</TableHead>
+                  <TableHead>物料类别</TableHead>
+                  <TableHead>厂商</TableHead>
+                  <TableHead>单位</TableHead>
+                  <TableHead>状态</TableHead>
+                  <TableHead>关联数</TableHead>
+                  <TableHead>操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.boms.map((b) => (
+                  <TableRow key={b.id}>
+                    <TableCell className="font-mono text-sm">
+                      <Link href={`/boms/${b.id}`} className="hover:underline">{b.bomCode}</Link>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate">{b.name ?? "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{b.model ?? "-"}</TableCell>
+                    <TableCell><Badge variant="outline">{b.materialCategory ?? "-"}</Badge></TableCell>
+                    <TableCell>{b.manufacturer ?? "-"}</TableCell>
+                    <TableCell>{b.unit ?? "-"}</TableCell>
+                    <TableCell>{b.status ?? b.lifecycle ?? "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 text-xs">
+                        <Badge variant="secondary">{b._count.parts} 部件</Badge>
+                        {b._count.items > 0 && <Badge variant="outline">{b._count.items} 物料</Badge>}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => { setEditing(b); setDialogOpen(true); }}>编辑</Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(b)}>删除</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="md:hidden space-y-3">
             {data.boms.map((b) => (
-              <TableRow key={b.id}>
-                <TableCell className="font-mono text-sm">
-                  <Link href={`/boms/${b.id}`} className="hover:underline">{b.bomCode}</Link>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">{b.name ?? "-"}</TableCell>
-                <TableCell className="text-muted-foreground">{b.model ?? "-"}</TableCell>
-                <TableCell><Badge variant="outline">{b.materialCategory ?? "-"}</Badge></TableCell>
-                <TableCell>{b.manufacturer ?? "-"}</TableCell>
-                <TableCell>{b.unit ?? "-"}</TableCell>
-                <TableCell>{b.status ?? b.lifecycle ?? "-"}</TableCell>
-                <TableCell><Badge variant="secondary">{b._count.parts}</Badge></TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm" onClick={() => { setEditing(b); setDialogOpen(true); }}>编辑</Button>
-                </TableCell>
-              </TableRow>
+              <Card key={b.id}>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Link href={`/boms/${b.id}`} className="font-mono font-semibold text-sm hover:underline">{b.bomCode}</Link>
+                      <p className="text-sm text-muted-foreground">{b.name ?? "-"}</p>
+                    </div>
+                    <Badge variant="secondary">{b._count.parts} 部件</Badge>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Badge variant="outline">{b.materialCategory ?? "-"}</Badge>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => { setEditing(b); setDialogOpen(true); }}>编辑</Button>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => handleDelete(b)}>删除</Button>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
-          </TableBody>
-        </Table>
-      </div>
+          </div>
 
-      <div className="md:hidden space-y-3">
-        {data.boms.map((b) => (
-          <Card key={b.id}>
-            <CardContent className="p-4">
-              <Link href={`/boms/${b.id}`} className="font-mono font-semibold text-sm hover:underline">{b.bomCode}</Link>
-              <p className="text-sm text-muted-foreground">{b.name ?? "-"}</p>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="outline">{b.materialCategory ?? "-"}</Badge>
-                <Badge variant="secondary">{b._count.parts} 部件</Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+          {data.boms.length === 0 && (
+            <p className="text-center text-muted-foreground py-12">暂无BOM</p>
+          )}
 
-      <Pagination
-        page={page} totalPages={Math.ceil(data.total / 50)} total={data.total} limit={50}
-        onPageChange={setPage} onLimitChange={() => {}}
-      />
-
+          <Pagination
+            page={page} totalPages={totalPages} total={data.total} limit={limit}
+            onPageChange={setPage} onLimitChange={setLimit}
+          />
         </>
       )}
+
       <BomFormDialog open={dialogOpen} onOpenChange={setDialogOpen} bom={editing} onSaved={load} />
     </div>
   );
