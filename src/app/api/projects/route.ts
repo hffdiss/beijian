@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";
+  const sort = searchParams.get("sort") ?? "name";
+  const dir = searchParams.get("dir") ?? "asc";
 
   const where: Record<string, unknown> = {};
   if (q) {
@@ -14,12 +16,21 @@ export async function GET(request: NextRequest) {
     ];
   }
 
+  // Map sort field to Prisma orderBy
+  const sortMap: Record<string, Record<string, string>> = {
+    name: { name: dir },
+    city: { city: dir },
+    contractNumber: { contractNumber: dir },
+    oem: { oem: dir },
+    warrantyEnd: { warrantyEnd: dir },
+  };
+
   const projects = await prisma.project.findMany({
     where,
     include: {
       _count: { select: { machines: true, parts: true } },
     },
-    orderBy: { name: "asc" },
+    orderBy: sortMap[sort] ?? { name: "asc" },
   });
 
   return NextResponse.json(projects);
