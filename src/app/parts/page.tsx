@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PartFormDialog } from "@/components/part-form-dialog";
 import { TableSkeleton } from "@/components/skeleton";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface PartItem {
   id: string;
@@ -24,6 +25,8 @@ interface PartItem {
   bom: { name: string | null } | null;
 }
 
+const PAGE_SIZES = [10, 20, 50];
+
 export default function PartsPage() {
   const [data, setData] = useState<{ parts: PartItem[]; total: number }>({ parts: [], total: 0 });
   const [q, setQ] = useState("");
@@ -32,15 +35,13 @@ export default function PartsPage() {
   const [isSpare, setIsSpare] = useState("");
   const [equipmentCategory, setEquipmentCategory] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [createOpen, setCreateOpen] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const hasActiveFilter = q || spareStatus || spareWarehouse || isSpare || equipmentCategory;
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: "50" });
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (q) params.set("q", q);
     if (spareStatus) params.set("spareStatus", spareStatus);
     if (spareWarehouse) params.set("spareWarehouse", spareWarehouse);
@@ -49,23 +50,23 @@ export default function PartsPage() {
     const res = await fetch(`/api/parts?${params}`);
     setData(await res.json());
     setLoading(false);
-  }, [q, spareStatus, spareWarehouse, isSpare, equipmentCategory, page]);
+  }, [q, spareStatus, spareWarehouse, isSpare, equipmentCategory, page, limit]);
 
   const handleSearch = () => {
-    setHasSearched(true);
     setPage(1);
     load();
   };
 
   useEffect(() => {
-    if (hasSearched) {
-      const timer = setTimeout(() => { load(); }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [load, hasSearched]);
+    const timer = setTimeout(() => { load(); }, 300);
+    return () => clearTimeout(timer);
+  }, [load]);
+
+  const totalPages = Math.ceil(data.total / limit);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      <Breadcrumb items={[{ label: "部件管理" }]} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">部件管理</h1>
         <Button onClick={() => setCreateOpen(true)}>新增部件</Button>
@@ -73,13 +74,13 @@ export default function PartsPage() {
 
       <div className="flex flex-wrap gap-3 mb-4">
         <Input
-          placeholder="输入关键词后按回车搜索..."
+          placeholder="多词搜索：SN/描述/型号/项目/机器..."
           value={q}
-          onChange={(e) => { setQ(e.target.value); setPage(1); setHasSearched(true); }}
+          onChange={(e) => { setQ(e.target.value); setPage(1); }}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="max-w-sm"
         />
-        <Select value={equipmentCategory || "null"} onValueChange={(v) => { setEquipmentCategory(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}>
+        <Select value={equipmentCategory || "null"} onValueChange={(v) => { setEquipmentCategory(!v || v === "null" ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="类别" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="null">全部类别</SelectItem>
@@ -96,7 +97,7 @@ export default function PartsPage() {
             <SelectItem value="线缆">线缆</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={spareStatus || "null"} onValueChange={(v) => { setSpareStatus(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}>
+        <Select value={spareStatus || "null"} onValueChange={(v) => { setSpareStatus(!v || v === "null" ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="备件状态" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="null">全部状态</SelectItem>
@@ -106,7 +107,7 @@ export default function PartsPage() {
             <SelectItem value="不涉及">不涉及</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={spareWarehouse || "null"} onValueChange={(v) => { setSpareWarehouse(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}>
+        <Select value={spareWarehouse || "null"} onValueChange={(v) => { setSpareWarehouse(!v || v === "null" ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="备件库房" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="null">全部库房</SelectItem>
@@ -114,7 +115,7 @@ export default function PartsPage() {
             <SelectItem value="现场备件">现场备件</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={isSpare || "null"} onValueChange={(v) => { setIsSpare(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}>
+        <Select value={isSpare || "null"} onValueChange={(v) => { setIsSpare(!v || v === "null" ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-32"><SelectValue placeholder="是否备件" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="null">全部</SelectItem>
@@ -126,73 +127,86 @@ export default function PartsPage() {
       </div>
 
       {loading ? (
-        <TableSkeleton rows={8} cols={8} />
-      ) : !hasSearched ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-4xl mb-4">🔍</p>
-          <p className="text-lg font-medium mb-2">输入搜索条件开始查询</p>
-          <p className="text-sm">支持 SN、描述、型号、项目名、机器SN 等多词组合搜索，也可按类别、备件状态筛选</p>
-        </div>
+        <TableSkeleton rows={limit > 10 ? 10 : limit} cols={8} />
       ) : (
         <>
-      <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>部件SN</TableHead>
-              <TableHead>描述</TableHead>
-              <TableHead>型号</TableHead>
-              <TableHead>项目</TableHead>
-              <TableHead>机器SN</TableHead>
-              <TableHead>备件</TableHead>
-              <TableHead>状态</TableHead>
-              <TableHead>库房</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>部件SN</TableHead>
+                  <TableHead>描述</TableHead>
+                  <TableHead>型号</TableHead>
+                  <TableHead>项目</TableHead>
+                  <TableHead>机器SN</TableHead>
+                  <TableHead>备件</TableHead>
+                  <TableHead>状态</TableHead>
+                  <TableHead>库房</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.parts.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-mono text-sm">
+                      <Link href={`/parts/${p.id}`} className="hover:underline">{p.partSn}</Link>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate">{p.description ?? "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{p.model ?? "-"}</TableCell>
+                    <TableCell className="text-sm">{p.project?.name ?? "-"}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{p.machine?.machineSn ?? "-"}</TableCell>
+                    <TableCell>{p.isSpare ? <Badge>是</Badge> : <Badge variant="outline">否</Badge>}</TableCell>
+                    <TableCell><Badge variant={p.spareStatus === "NG" ? "destructive" : "secondary"}>{p.spareStatus ?? "-"}</Badge></TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{p.spareWarehouse ?? "-"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="md:hidden space-y-3">
             {data.parts.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-mono text-sm">
-                  <Link href={`/parts/${p.id}`} className="hover:underline">{p.partSn}</Link>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">{p.description ?? "-"}</TableCell>
-                <TableCell className="text-muted-foreground">{p.model ?? "-"}</TableCell>
-                <TableCell className="text-sm">{p.project?.name ?? "-"}</TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">{p.machine?.machineSn ?? "-"}</TableCell>
-                <TableCell>{p.isSpare ? <Badge>是</Badge> : <Badge variant="outline">否</Badge>}</TableCell>
-                <TableCell><Badge variant={p.spareStatus === "NG" ? "destructive" : "secondary"}>{p.spareStatus ?? "-"}</Badge></TableCell>
-                <TableCell className="text-muted-foreground text-sm">{p.spareWarehouse ?? "-"}</TableCell>
-              </TableRow>
+              <Card key={p.id}>
+                <CardContent className="p-4">
+                  <Link href={`/parts/${p.id}`} className="font-mono font-semibold text-sm hover:underline">{p.partSn}</Link>
+                  <p className="text-sm text-muted-foreground truncate">{p.description ?? "-"}</p>
+                  <div className="flex gap-2 mt-2">
+                    <Badge variant="outline">{p.project?.name ?? "-"}</Badge>
+                    <Badge variant={p.spareStatus === "NG" ? "destructive" : "secondary"}>{p.spareStatus ?? "-"}</Badge>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
-          </TableBody>
-        </Table>
-      </div>
+          </div>
 
-      <div className="md:hidden space-y-3">
-        {data.parts.map((p) => (
-          <Card key={p.id}>
-            <CardContent className="p-4">
-              <Link href={`/parts/${p.id}`} className="font-mono font-semibold text-sm hover:underline">{p.partSn}</Link>
-              <p className="text-sm text-muted-foreground truncate">{p.description ?? "-"}</p>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="outline">{p.project?.name ?? "-"}</Badge>
-                <Badge variant={p.spareStatus === "NG" ? "destructive" : "secondary"}>{p.spareStatus ?? "-"}</Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+          {data.parts.length === 0 && (
+            <p className="text-center text-muted-foreground py-12">暂无部件</p>
+          )}
 
-      {data.total > 50 && (
-        <div className="flex justify-center gap-2 mt-4">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>上一页</Button>
-          <span className="text-sm text-muted-foreground self-center">{page} / {Math.ceil(data.total / 50)}</span>
-          <Button variant="outline" size="sm" disabled={page * 50 >= data.total} onClick={() => setPage((p) => p + 1)}>下一页</Button>
-        </div>
-      )}
-
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>每页</span>
+              <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-16 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZES.map((s) => (
+                    <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span>行 · 共 {data.total} 条</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>上一页</Button>
+              <span className="text-sm text-muted-foreground">{page} / {totalPages || 1}</span>
+              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>下一页</Button>
+            </div>
+          </div>
         </>
       )}
+
       <PartFormDialog open={createOpen} onOpenChange={setCreateOpen} onSaved={load} />
     </div>
   );

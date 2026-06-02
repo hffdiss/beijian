@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const spareWarehouse = searchParams.get("spareWarehouse") ?? "";
   const equipmentCategory = searchParams.get("equipmentCategory") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1");
-  const limit = parseInt(searchParams.get("limit") ?? "50");
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") ?? "20"), 10), 50);
 
   const where: Record<string, unknown> = {};
 
