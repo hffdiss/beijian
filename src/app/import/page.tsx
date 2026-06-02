@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface ImportResult {
   projects: number;
@@ -38,6 +39,7 @@ export default function ImportPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
+      <Breadcrumb items={[{ label: "数据导入" }]} />
       <h1 className="text-2xl font-bold mb-6">数据导入</h1>
 
       <Card className="mb-6">

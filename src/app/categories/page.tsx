@@ -8,6 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { CategoryFormDialog } from "@/components/category-form-dialog";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface Category {
   id: string;
@@ -50,6 +51,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      <Breadcrumb items={[{ label: "分类管理" }]} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">分类管理</h1>
         <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>

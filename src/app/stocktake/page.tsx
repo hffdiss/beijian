@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface StockTakeRecord {
   id: string;
@@ -188,6 +189,7 @@ export default function StockTakePage() {
   // 发起盘点页面
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      <Breadcrumb items={[{ label: "盘点" }]} />
       <h1 className="text-2xl font-bold mb-6">盘点</h1>
 
       <Card className="mb-6">

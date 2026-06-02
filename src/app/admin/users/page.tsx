@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface User {
   id: string;
@@ -105,6 +106,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      <Breadcrumb items={[{ label: "用户管理" }]} />
       <h1 className="text-2xl font-bold mb-6">用户管理</h1>
 
       <Card>

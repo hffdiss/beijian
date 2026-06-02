@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -103,6 +104,7 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 max-w-xl mx-auto">
+      <Breadcrumb items={[{ label: "用户设置" }]} />
       <h1 className="text-2xl font-bold mb-6">用户设置</h1>
 
       <Tabs defaultValue="password">

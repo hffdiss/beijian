@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 const baseNavItems = [
   { href: "/", label: "仪表盘", icon: "📦" },
   { href: "/projects", label: "项目管理", icon: "🏗️" },
+  { href: "/machines", label: "机器管理", icon: "🖥️" },
   { href: "/parts", label: "部件管理", icon: "🔧" },
   { href: "/boms", label: "BOM管理", icon: "📋" },
   { href: "/items", label: "物料管理", icon: "📦" },
