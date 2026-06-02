@@ -69,26 +69,36 @@ export default async function DashboardPage() {
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">项目数</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{projectCount}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">机器数</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{machineCount}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">部件总数</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{partCount}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">备件数</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold text-green-600">{sparePartCount}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">库存总值</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">¥{estimatedValue.toFixed(0)}</p></CardContent>
-        </Card>
+        <Link href="/projects">
+          <Card className="hover:shadow-md hover:border-primary/30 transition-shadow cursor-pointer h-full">
+            <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">项目数</CardTitle></CardHeader>
+            <CardContent><p className="text-2xl font-bold">{projectCount}</p></CardContent>
+          </Card>
+        </Link>
+        <Link href="/projects">
+          <Card className="hover:shadow-md hover:border-primary/30 transition-shadow cursor-pointer h-full">
+            <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">机器数</CardTitle></CardHeader>
+            <CardContent><p className="text-2xl font-bold">{machineCount}</p></CardContent>
+          </Card>
+        </Link>
+        <Link href="/parts">
+          <Card className="hover:shadow-md hover:border-primary/30 transition-shadow cursor-pointer h-full">
+            <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">部件总数</CardTitle></CardHeader>
+            <CardContent><p className="text-2xl font-bold">{partCount}</p></CardContent>
+          </Card>
+        </Link>
+        <Link href="/parts?isSpare=true">
+          <Card className="hover:shadow-md hover:border-primary/30 transition-shadow cursor-pointer h-full">
+            <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">备件数</CardTitle></CardHeader>
+            <CardContent><p className="text-2xl font-bold text-green-600">{sparePartCount}</p></CardContent>
+          </Card>
+        </Link>
+        <Link href="/items">
+          <Card className="hover:shadow-md hover:border-primary/30 transition-shadow cursor-pointer h-full">
+            <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">库存总值</CardTitle></CardHeader>
+            <CardContent><p className="text-2xl font-bold">¥{estimatedValue.toFixed(0)}</p></CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* 快捷操作 */}
@@ -101,7 +111,9 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 低库存预警 */}
         <Card>
-          <CardHeader><CardTitle>低库存预警</CardTitle></CardHeader>
+          <CardHeader>
+            <Link href="/items" className="hover:underline"><CardTitle>低库存预警</CardTitle></Link>
+          </CardHeader>
           <CardContent>
             {lowStockItems.length === 0 ? (
               <p className="text-muted-foreground text-sm">暂无低库存物料</p>
@@ -125,7 +137,9 @@ export default async function DashboardPage() {
 
         {/* 项目维保到期提醒 */}
         <Card>
-          <CardHeader><CardTitle>项目维保到期提醒（90天内）</CardTitle></CardHeader>
+          <CardHeader>
+            <Link href="/projects" className="hover:underline"><CardTitle>项目维保到期提醒（90天内）</CardTitle></Link>
+          </CardHeader>
           <CardContent>
             {expiringProjects.length === 0 ? (
               <p className="text-muted-foreground text-sm">暂无即将到期的维保</p>
@@ -153,7 +167,9 @@ export default async function DashboardPage() {
 
         {/* 待处理备件 */}
         <Card>
-          <CardHeader><CardTitle>待处理备件（非OK状态）</CardTitle></CardHeader>
+          <CardHeader>
+            <Link href="/parts?spareStatus=NG" className="hover:underline"><CardTitle>待处理备件（非OK状态）</CardTitle></Link>
+          </CardHeader>
           <CardContent>
             {pendingSpareParts.length === 0 ? (
               <p className="text-muted-foreground text-sm">暂无待处理备件</p>
@@ -181,17 +197,19 @@ export default async function DashboardPage() {
 
         {/* 本月出入库 */}
         <Card>
-          <CardHeader><CardTitle>本月出入库</CardTitle></CardHeader>
+          <CardHeader>
+            <Link href="/transactions/history" className="hover:underline"><CardTitle>本月出入库</CardTitle></Link>
+          </CardHeader>
           <CardContent>
             <div className="flex gap-6 mb-4">
-              <div className="text-center">
+              <Link href="/transactions/history?type=IN" className="text-center flex-1 hover:bg-muted/50 rounded-lg py-2 transition-colors">
                 <p className="text-3xl font-bold text-green-600">{inCount}</p>
                 <p className="text-sm text-muted-foreground">入库次数</p>
-              </div>
-              <div className="text-center">
+              </Link>
+              <Link href="/transactions/history?type=OUT" className="text-center flex-1 hover:bg-muted/50 rounded-lg py-2 transition-colors">
                 <p className="text-3xl font-bold text-orange-600">{outCount}</p>
                 <p className="text-sm text-muted-foreground">出库次数</p>
-              </div>
+              </Link>
             </div>
             <div className="space-y-2">
               {recentTxns.slice(0, 5).map((txn) => (
