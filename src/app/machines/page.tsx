@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { TableSkeleton } from "@/components/skeleton";
+import { Pagination } from "@/components/pagination";
 
 interface Machine {
   id: string;
@@ -21,8 +22,6 @@ interface Machine {
   project: { name: string };
   _count: { parts: number };
 }
-
-const PAGE_SIZES = [10, 20, 50];
 
 export default function MachinesPage() {
   const [data, setData] = useState<{ machines: Machine[]; total: number }>({ machines: [], total: 0 });
@@ -147,27 +146,10 @@ export default function MachinesPage() {
           )}
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>每页</span>
-              <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
-                <SelectTrigger className="w-16 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZES.map((s) => (
-                    <SelectItem key={s} value={String(s)}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <span>行 · 共 {data.total} 条</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>上一页</Button>
-              <span className="text-sm text-muted-foreground">{page} / {totalPages || 1}</span>
-              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>下一页</Button>
-            </div>
-          </div>
+          <Pagination
+            page={page} totalPages={totalPages} total={data.total} limit={limit}
+            onPageChange={setPage} onLimitChange={setLimit}
+          />
         </>
       )}
     </div>

@@ -13,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ItemFormDialog } from "@/components/item-form-dialog";
+import { Pagination } from "@/components/pagination";
 
 interface Category {
   id: string;
@@ -223,13 +224,10 @@ export default function ItemsPage() {
         <p className="text-center text-muted-foreground py-12">暂无物料</p>
       )}
 
-      {data.total > 30 && (
-        <div className="flex justify-center gap-2 mt-4">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>上一页</Button>
-          <span className="text-sm text-muted-foreground self-center">{page} / {Math.ceil(data.total / 30)}</span>
-          <Button variant="outline" size="sm" disabled={page * 30 >= data.total} onClick={() => setPage((p) => p + 1)}>下一页</Button>
-        </div>
-      )}
+      <Pagination
+        page={page} totalPages={Math.ceil(data.total / 30)} total={data.total} limit={30}
+        onPageChange={setPage} onLimitChange={() => {}}
+      />
         </>
       )}
 

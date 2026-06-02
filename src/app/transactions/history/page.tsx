@@ -11,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { Pagination } from "@/components/pagination";
 
 interface Transaction {
   id: string;
@@ -108,27 +109,10 @@ export default function TransactionHistoryPage() {
         <p className="text-center text-muted-foreground py-12">暂无记录</p>
       )}
 
-      {data.total > 50 && (
-        <div className="flex justify-center gap-2 mt-4">
-          <Button
-            variant="outline" size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            上一页
-          </Button>
-          <span className="text-sm text-muted-foreground self-center">
-            {page} / {Math.ceil(data.total / 50)}
-          </span>
-          <Button
-            variant="outline" size="sm"
-            disabled={page * 50 >= data.total}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            下一页
-          </Button>
-        </div>
-      )}
+      <Pagination
+        page={page} totalPages={Math.ceil(data.total / 50)} total={data.total} limit={50}
+        onPageChange={setPage} onLimitChange={() => {}}
+      />
     </div>
   );
 }

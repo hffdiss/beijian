@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PartFormDialog } from "@/components/part-form-dialog";
 import { TableSkeleton } from "@/components/skeleton";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { Pagination } from "@/components/pagination";
 
 interface PartItem {
   id: string;
@@ -24,8 +25,6 @@ interface PartItem {
   machine: { machineSn: string } | null;
   bom: { name: string | null } | null;
 }
-
-const PAGE_SIZES = [10, 20, 50];
 
 export default function PartsPage() {
   const [data, setData] = useState<{ parts: PartItem[]; total: number }>({ parts: [], total: 0 });
@@ -183,27 +182,10 @@ export default function PartsPage() {
           )}
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>每页</span>
-              <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
-                <SelectTrigger className="w-16 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZES.map((s) => (
-                    <SelectItem key={s} value={String(s)}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <span>行 · 共 {data.total} 条</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>上一页</Button>
-              <span className="text-sm text-muted-foreground">{page} / {totalPages || 1}</span>
-              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>下一页</Button>
-            </div>
-          </div>
+          <Pagination
+            page={page} totalPages={totalPages} total={data.total} limit={limit}
+            onPageChange={setPage} onLimitChange={setLimit}
+          />
         </>
       )}
 
