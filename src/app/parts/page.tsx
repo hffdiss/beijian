@@ -141,6 +141,7 @@ export default function PartsPage() {
                   <TableHead>备件</TableHead>
                   <TableHead>状态</TableHead>
                   <TableHead>库房</TableHead>
+                  <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -156,6 +157,20 @@ export default function PartsPage() {
                     <TableCell>{p.isSpare ? <Badge>是</Badge> : <Badge variant="outline">否</Badge>}</TableCell>
                     <TableCell><Badge variant={p.spareStatus === "NG" ? "destructive" : "secondary"}>{p.spareStatus ?? "-"}</Badge></TableCell>
                     <TableCell className="text-muted-foreground text-sm">{p.spareWarehouse ?? "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Link href={`/parts/${p.id}`}>
+                          <Button variant="ghost" size="sm">编辑</Button>
+                        </Link>
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          if (!confirm(`确定删除部件 "${p.partSn}"？`)) return;
+                          fetch(`/api/parts/${p.id}`, { method: "DELETE" }).then((r) => {
+                            if (!r.ok) r.json().then((e: { error: string }) => alert(e.error));
+                            else load();
+                          });
+                        }}>删除</Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
