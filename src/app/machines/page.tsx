@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { TableSkeleton } from "@/components/skeleton";
 
 interface Machine {
   id: string;
@@ -21,13 +22,16 @@ interface Machine {
   _count: { parts: number };
 }
 
+const PAGE_SIZES = [10, 20, 50];
+
 export default function MachinesPage() {
-  const [machines, setMachines] = useState<Machine[]>([]);
+  const [data, setData] = useState<{ machines: Machine[]; total: number }>({ machines: [], total: 0 });
   const [q, setQ] = useState("");
   const [projectId, setProjectId] = useState("");
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/projects").then((r) => r.json()).then(setProjects);
@@ -35,25 +39,26 @@ export default function MachinesPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams();
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (q) params.set("q", q);
     if (projectId) params.set("projectId", projectId);
     const res = await fetch(`/api/machines?${params}`);
-    setMachines(await res.json());
+    const json = await res.json();
+    setData(Array.isArray(json) ? { machines: json, total: json.length } : json);
     setLoading(false);
-  }, [q, projectId]);
+  }, [q, projectId, page, limit]);
 
   const handleSearch = () => {
-    setHasSearched(true);
+    setPage(1);
     load();
   };
 
   useEffect(() => {
-    if (hasSearched) {
-      const timer = setTimeout(() => { load(); }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [load, hasSearched]);
+    const timer = setTimeout(() => { load(); }, 300);
+    return () => clearTimeout(timer);
+  }, [load]);
+
+  const totalPages = Math.ceil(data.total / limit);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -62,15 +67,15 @@ export default function MachinesPage() {
 
       <div className="flex gap-3 mb-4">
         <Input
-          placeholder="输入机器SN或产品名后按回车搜索..."
+          placeholder="输入机器SN或产品名搜索..."
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => { setQ(e.target.value); setPage(1); }}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="max-w-sm"
         />
         <Select
           value={projectId || "null"}
-          onValueChange={(v) => { setProjectId(!v || v === "null" ? "" : v); setHasSearched(true); }}
+          onValueChange={(v) => { setProjectId(!v || v === "null" ? "" : v); setPage(1); }}
         >
           <SelectTrigger className="w-48">
             <SelectValue placeholder="全部项目" />
@@ -85,18 +90,8 @@ export default function MachinesPage() {
         <Button variant="secondary" onClick={handleSearch}>搜索</Button>
       </div>
 
-      {!hasSearched ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-4xl mb-4">🔍</p>
-          <p className="text-lg font-medium mb-2">输入搜索条件开始查询</p>
-          <p className="text-sm">支持按机器SN、产品名称搜索</p>
-        </div>
-      ) : loading ? (
-        <div className="animate-pulse space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex gap-4 py-3 border-b"><div className="h-4 bg-muted rounded flex-1" /><div className="h-4 bg-muted rounded flex-1" /><div className="h-4 bg-muted rounded flex-1" /></div>
-          ))}
-        </div>
+      {loading ? (
+        <TableSkeleton rows={limit > 10 ? 10 : limit} cols={7} />
       ) : (
         <>
           <div className="hidden md:block">
@@ -113,7 +108,7 @@ export default function MachinesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {machines.map((m) => (
+                {data.machines.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="font-mono text-sm">
                       <Link href={`/machines/${m.id}`} className="hover:underline">{m.machineSn}</Link>
@@ -123,7 +118,7 @@ export default function MachinesPage() {
                     <TableCell className="text-muted-foreground">{m.modelCode ?? "-"}</TableCell>
                     <TableCell>{m.manufacturer ?? "-"}</TableCell>
                     <TableCell>
-                      <Link href={`/projects`} className="text-sm hover:underline">{m.project.name}</Link>
+                      <Link href={`/projects/${m.project.name}`} className="text-sm hover:underline">{m.project.name}</Link>
                     </TableCell>
                     <TableCell><Badge variant="secondary">{m._count.parts}</Badge></TableCell>
                   </TableRow>
@@ -131,8 +126,9 @@ export default function MachinesPage() {
               </TableBody>
             </Table>
           </div>
+
           <div className="md:hidden space-y-3">
-            {machines.map((m) => (
+            {data.machines.map((m) => (
               <Card key={m.id}>
                 <CardContent className="p-4">
                   <Link href={`/machines/${m.id}`} className="font-mono font-semibold text-sm hover:underline">{m.machineSn}</Link>
@@ -145,7 +141,33 @@ export default function MachinesPage() {
               </Card>
             ))}
           </div>
-          {machines.length === 0 && <p className="text-center text-muted-foreground py-12">未找到机器</p>}
+
+          {data.machines.length === 0 && (
+            <p className="text-center text-muted-foreground py-12">未找到机器</p>
+          )}
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>每页</span>
+              <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-16 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZES.map((s) => (
+                    <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span>行 · 共 {data.total} 条</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>上一页</Button>
+              <span className="text-sm text-muted-foreground">{page} / {totalPages || 1}</span>
+              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>下一页</Button>
+            </div>
+          </div>
         </>
       )}
     </div>
