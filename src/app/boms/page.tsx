@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BomFormDialog } from "@/components/bom-form-dialog";
 
 interface BomItem {
@@ -68,6 +69,25 @@ export default function BomsPage() {
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="max-w-sm"
         />
+        <Select
+          value={materialCategory || "null"}
+          onValueChange={(v) => { setMaterialCategory(!v || v === "null" ? "" : v); setPage(1); setHasSearched(true); }}
+        >
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="物料类别" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="null">全部类别</SelectItem>
+            <SelectItem value="0B包装材料">包装材料</SelectItem>
+            <SelectItem value="0C存储介质">存储介质</SelectItem>
+            <SelectItem value="0E交换机">交换机</SelectItem>
+            <SelectItem value="0J结构件">结构件</SelectItem>
+            <SelectItem value="0K板卡">板卡</SelectItem>
+            <SelectItem value="0N内存">内存</SelectItem>
+            <SelectItem value="0R软件">软件</SelectItem>
+            <SelectItem value="0X处理器">处理器</SelectItem>
+          </SelectContent>
+        </Select>
         <Button variant="secondary" onClick={handleSearch}>搜索</Button>
       </div>
 

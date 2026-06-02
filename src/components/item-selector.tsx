@@ -62,7 +62,8 @@ export function ItemSelector({ value, onChange, placeholder, transactionType }: 
 
   const loadItems = async (q: string) => {
     const res = await fetch(`/api/items?q=${encodeURIComponent(q)}&limit=20`);
-    setItems(await res.json());
+    const data = await res.json();
+    setItems(Array.isArray(data) ? data : data.items ?? []);
   };
 
   useEffect(() => {
@@ -74,7 +75,8 @@ export function ItemSelector({ value, onChange, placeholder, transactionType }: 
       if (recentIds.length > 0) {
         fetch(`/api/items?limit=20`)
           .then((r) => r.json())
-          .then((all: ItemOption[]) => {
+          .then((data) => {
+            const all: ItemOption[] = Array.isArray(data) ? data : data.items ?? [];
             const ordered = recentIds
               .map((id) => all.find((i) => i.id === id))
               .filter(Boolean) as ItemOption[];

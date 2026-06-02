@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { ItemFormDialog } from "@/components/item-form-dialog";
 
 interface Transaction {
   id: string;
@@ -38,29 +39,45 @@ interface Item {
   warrantyEnd: string | null;
   nandType: string | null;
   compatibleProducts: string | null;
+  bomCode: string | null;
   category: { id: string; name: string };
   transactions: Transaction[];
   createdAt: string;
   updatedAt: string;
 }
 
+interface Category {
+  id: string; name: string; parentId: string | null;
+}
+
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [item, setItem] = useState<Item | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  useEffect(() => {
+  const load = () => {
     fetch(`/api/items/${id}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.error) {
-          setError(data.error);
-        } else {
-          setItem(data);
-        }
+        if (data.error) { setError(data.error); } else { setItem(data); }
       })
       .catch(() => setError("加载失败"));
+  };
+
+  useEffect(() => {
+    load();
+    fetch("/api/categories").then((r) => r.json()).then(setCategories);
   }, [id]);
+
+  const handleDelete = async () => {
+    if (!confirm("确定删除该物料？此操作不可撤销。")) return;
+    const res = await fetch(`/api/items/${id}`, { method: "DELETE" });
+    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+    router.push("/items");
+  };
 
   if (error) {
     return (
@@ -99,6 +116,9 @@ export default function ItemDetailPage() {
         {item.quantity <= item.safetyStock && item.safetyStock > 0 && (
           <Badge variant="destructive">库存不足</Badge>
         )}
+        <div className="flex-1" />
+        <Button variant="outline" onClick={() => setEditOpen(true)}>编辑</Button>
+        <Button variant="destructive" onClick={handleDelete}>删除</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -159,6 +179,11 @@ export default function ItemDetailPage() {
             <div className="col-span-2">
               <span className="text-muted-foreground">描述:</span> {item.description ?? "-"}
             </div>
+            <div>
+              <span className="text-muted-foreground">关联BOM:</span> {item.bomCode ? (
+                <Link href={`/boms?q=${item.bomCode}`} className="font-mono hover:underline text-sm">{item.bomCode}</Link>
+              ) : "-"}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -198,6 +223,14 @@ export default function ItemDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <ItemFormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        item={item}
+        categories={categories}
+        onSaved={load}
+      />
     </div>
   );
 }

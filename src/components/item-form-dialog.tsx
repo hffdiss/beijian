@@ -62,6 +62,13 @@ export function ItemFormDialog({
 
   const [form, setForm] = useState<Item>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [bomList, setBomList] = useState<{ id: string; bomCode: string; name: string | null }[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      fetch("/api/boms?limit=200").then((r) => r.json()).then((d) => setBomList(d.boms ?? []));
+    }
+  }, [open]);
 
   useEffect(() => {
     if (item) {
@@ -235,12 +242,23 @@ export function ItemFormDialog({
 
           <TabsContent value="other" className="space-y-3">
             <div>
-              <label className="text-sm font-medium">BBOM编码</label>
-              <Input
-                value={form.bomCode ?? ""}
-                onChange={(e) => update("bomCode", e.target.value)}
-                placeholder="可选，关联BOM主数据"
-              />
+              <label className="text-sm font-medium">关联BOM</label>
+              <Select
+                value={form.bomCode ?? "null"}
+                onValueChange={(v) => update("bomCode", !v || v === "null" ? "" : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择关联BOM（可选）" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="null">不关联</SelectItem>
+                  {bomList.map((b) => (
+                    <SelectItem key={b.id} value={b.bomCode}>
+                      {b.bomCode}{b.name ? ` — ${b.name}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-sm font-medium">备注</label>
