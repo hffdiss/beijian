@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { ItemFormDialog } from "@/components/item-form-dialog";
 import { Pagination } from "@/components/pagination";
+import { Breadcrumb } from "@/components/breadcrumb";
+import { TableSkeleton } from "@/components/skeleton";
 
 interface Category {
   id: string;
@@ -51,18 +53,21 @@ export default function ItemsPage() {
   const [q, setQ] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const loadItems = useCallback(async () => {
-    const params = new URLSearchParams({ page: String(page), limit: "30" });
+    setLoading(true);
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (q) params.set("q", q);
     if (categoryId) params.set("categoryId", categoryId);
     const res = await fetch(`/api/items?${params}`);
     const json = await res.json();
     setData(Array.isArray(json) ? { items: json, total: json.length } : json);
-  }, [q, categoryId, page]);
+    setLoading(false);
+  }, [q, categoryId, page, limit]);
 
   const loadCategories = async () => {
     fetch("/api/categories").then((r) => r.json()).then(setCategories);
@@ -70,27 +75,17 @@ export default function ItemsPage() {
 
   useEffect(() => { loadCategories(); }, []);
 
-  const handleSearch = () => {
-    setHasSearched(true);
-    setPage(1);
-    loadItems();
-  };
+  const handleSearch = () => { setPage(1); loadItems(); };
 
   useEffect(() => {
-    if (hasSearched) {
-      const timer = setTimeout(() => { loadItems(); }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [loadItems, hasSearched]);
+    const timer = setTimeout(() => { loadItems(); }, 300);
+    return () => clearTimeout(timer);
+  }, [loadItems]);
 
   const handleDelete = async (item: Item) => {
     if (!confirm(`确定删除物料 "${item.name}"？`)) return;
     const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
-    if (!res.ok) {
-      const err = await res.json();
-      alert(err.error);
-      return;
-    }
+    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
     loadItems();
   };
 
@@ -104,18 +99,19 @@ export default function ItemsPage() {
     return result;
   });
 
+  const totalPages = Math.ceil(data.total / limit);
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      <Breadcrumb items={[{ label: "物料管理" }]} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">物料管理</h1>
-        <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>
-          新增物料
-        </Button>
+        <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>新增物料</Button>
       </div>
 
       <div className="flex gap-3 mb-4">
         <Input
-          placeholder="输入关键词后按回车搜索..."
+          placeholder="输入关键词搜索（名称/编号/型号/SN）..."
           value={q}
           onChange={(e) => { setQ(e.target.value); setPage(1); }}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -123,11 +119,7 @@ export default function ItemsPage() {
         />
         <Select
           value={categoryId || "null"}
-          onValueChange={(v) => {
-            setCategoryId(!v || v === "null" ? "" : v);
-            setPage(1);
-            setHasSearched(true);
-          }}
+          onValueChange={(v) => { setCategoryId(!v || v === "null" ? "" : v); setPage(1); }}
         >
           <SelectTrigger className="w-48">
             <SelectValue placeholder="全部分类" />
@@ -135,99 +127,89 @@ export default function ItemsPage() {
           <SelectContent>
             <SelectItem value="null">全部分类</SelectItem>
             {categoriesFlat.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {categoryName(c)}
-              </SelectItem>
+              <SelectItem key={c.id} value={c.id}>{categoryName(c)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Button variant="secondary" onClick={handleSearch}>搜索</Button>
       </div>
 
-      {!hasSearched ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-4xl mb-4">🔍</p>
-          <p className="text-lg font-medium mb-2">输入搜索条件开始查询</p>
-          <p className="text-sm">支持按名称、编号、型号、SN、描述 等多词搜索，也可按分类筛选</p>
-        </div>
+      {loading ? (
+        <TableSkeleton rows={limit > 10 ? 10 : limit} cols={8} />
       ) : (
         <>
-      <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>编号</TableHead>
-              <TableHead>名称</TableHead>
-              <TableHead>型号</TableHead>
-              <TableHead>分类</TableHead>
-              <TableHead>BOM</TableHead>
-              <TableHead>库存</TableHead>
-              <TableHead>位置</TableHead>
-              <TableHead>操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>编号</TableHead>
+                  <TableHead>名称</TableHead>
+                  <TableHead>型号</TableHead>
+                  <TableHead>分类</TableHead>
+                  <TableHead>BOM</TableHead>
+                  <TableHead>库存</TableHead>
+                  <TableHead>位置</TableHead>
+                  <TableHead>操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-mono text-sm">{item.code}</TableCell>
+                    <TableCell>
+                      <Link href={`/items/${item.id}`} className="hover:underline">{item.name}</Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{item.model ?? "-"}</TableCell>
+                    <TableCell><Badge variant="outline">{item.category.name}</Badge></TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{item.bomCode ?? "-"}</TableCell>
+                    <TableCell>
+                      <span className={item.quantity <= item.safetyStock && item.safetyStock > 0 ? "text-red-600 font-semibold" : ""}>
+                        {item.quantity} {item.unit}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{item.position ?? "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => { setEditing(item); setDialogOpen(true); }}>编辑</Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>删除</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="md:hidden space-y-3">
             {data.items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-mono text-sm">{item.code}</TableCell>
-                <TableCell>
-                  <Link href={`/items/${item.id}`} className="hover:underline">
-                    {item.name}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{item.model ?? "-"}</TableCell>
-                <TableCell><Badge variant="outline">{item.category.name}</Badge></TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">{item.bomCode ?? "-"}</TableCell>
-                <TableCell>
-                  <span className={item.quantity <= item.safetyStock && item.safetyStock > 0 ? "text-red-600 font-semibold" : ""}>
-                    {item.quantity} {item.unit}
-                  </span>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{item.position ?? "-"}</TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm"
-                      onClick={() => { setEditing(item); setDialogOpen(true); }}>编辑</Button>
-                    <Button variant="ghost" size="sm"
-                      onClick={() => handleDelete(item)}>删除</Button>
+              <Card key={item.id}>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Link href={`/items/${item.id}`} className="font-semibold hover:underline">{item.name}</Link>
+                      <p className="text-sm text-muted-foreground">{item.code}{item.bomCode ? ` | ${item.bomCode}` : ""}</p>
+                    </div>
+                    <Badge variant={item.quantity <= item.safetyStock && item.safetyStock > 0 ? "destructive" : "secondary"}>
+                      {item.quantity} {item.unit}
+                    </Badge>
                   </div>
-                </TableCell>
-              </TableRow>
+                  <div className="flex gap-2 mt-2 text-sm text-muted-foreground">
+                    <span>{item.category.name}</span>
+                    {item.position && <span>| {item.position}</span>}
+                  </div>
+                </CardContent>
+              </Card>
             ))}
-          </TableBody>
-        </Table>
-      </div>
+          </div>
 
-      <div className="md:hidden space-y-3">
-        {data.items.map((item) => (
-          <Card key={item.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <Link href={`/items/${item.id}`} className="font-semibold hover:underline">{item.name}</Link>
-                  <p className="text-sm text-muted-foreground">{item.code}{item.bomCode ? ` | ${item.bomCode}` : ""}</p>
-                </div>
-                <Badge variant={item.quantity <= item.safetyStock && item.safetyStock > 0 ? "destructive" : "secondary"}>
-                  {item.quantity} {item.unit}
-                </Badge>
-              </div>
-              <div className="flex gap-2 mt-2 text-sm text-muted-foreground">
-                <span>{item.category.name}</span>
-                {item.position && <span>| {item.position}</span>}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+          {data.items.length === 0 && (
+            <p className="text-center text-muted-foreground py-12">暂无物料</p>
+          )}
 
-      {data.items.length === 0 && (
-        <p className="text-center text-muted-foreground py-12">暂无物料</p>
-      )}
-
-      <Pagination
-        page={page} totalPages={Math.ceil(data.total / 30)} total={data.total} limit={30}
-        onPageChange={setPage} onLimitChange={() => {}}
-      />
+          <Pagination
+            page={page} totalPages={totalPages} total={data.total} limit={limit}
+            onPageChange={setPage} onLimitChange={setLimit}
+          />
         </>
       )}
 
