@@ -31,21 +31,29 @@ export default function MachinesPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState("machineSn");
+  const [dir, setDir] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     fetch("/api/projects").then((r) => r.json()).then(setProjects);
   }, []);
 
+  const toggleSort = (field: string) => {
+    if (sort === field) { setDir((d) => (d === "asc" ? "desc" : "asc")); }
+    else { setSort(field); setDir("asc"); }
+    setPage(1);
+  };
+
   const load = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    const params = new URLSearchParams({ page: String(page), limit: String(limit), sort, dir });
     if (q) params.set("q", q);
     if (projectId) params.set("projectId", projectId);
     const res = await fetch(`/api/machines?${params}`);
     const json = await res.json();
     setData(Array.isArray(json) ? { machines: json, total: json.length } : json);
     setLoading(false);
-  }, [q, projectId, page, limit]);
+  }, [q, projectId, page, limit, sort, dir]);
 
   const handleSearch = () => {
     setPage(1);
@@ -58,6 +66,23 @@ export default function MachinesPage() {
   }, [load]);
 
   const totalPages = Math.ceil(data.total / limit);
+
+  const SortHead = ({ field, label }: { field: string; label: string }) => (
+    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => toggleSort(field)}>
+      <span className="inline-flex items-center gap-1">
+        {label}
+        {sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}
+      </span>
+    </TableHead>
+  );
+
+  // Client-side sort for parts count (aggregation field)
+  const sortedData = { ...data };
+  if (sort === "parts" && data.machines.length > 0) {
+    sortedData.machines = [...data.machines].sort((a, b) =>
+      dir === "asc" ? a._count.parts - b._count.parts : b._count.parts - a._count.parts
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -97,17 +122,17 @@ export default function MachinesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>整机SN</TableHead>
-                  <TableHead>厂商SN</TableHead>
-                  <TableHead>产品</TableHead>
-                  <TableHead>型号代码</TableHead>
-                  <TableHead>厂商</TableHead>
-                  <TableHead>项目</TableHead>
-                  <TableHead>部件数</TableHead>
+                  <SortHead field="machineSn" label="整机SN" />
+                  <SortHead field="manufacturerSn" label="厂商SN" />
+                  <SortHead field="product" label="产品" />
+                  <SortHead field="modelCode" label="型号代码" />
+                  <SortHead field="manufacturer" label="厂商" />
+                  <SortHead field="project" label="项目" />
+                  <SortHead field="parts" label="部件数" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.machines.map((m) => (
+                {(sort === "parts" ? sortedData.machines : data.machines).map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="font-mono text-sm">
                       <Link href={`/machines/${m.id}`} className="hover:underline">{m.machineSn}</Link>
@@ -127,7 +152,7 @@ export default function MachinesPage() {
           </div>
 
           <div className="md:hidden space-y-3">
-            {data.machines.map((m) => (
+            {(sort === "parts" ? sortedData.machines : data.machines).map((m) => (
               <Card key={m.id}>
                 <CardContent className="p-4">
                   <Link href={`/machines/${m.id}`} className="font-mono font-semibold text-sm hover:underline">{m.machineSn}</Link>
