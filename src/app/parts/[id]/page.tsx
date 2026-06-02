@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface PartDetail {
   id: string; partSn: string;
@@ -100,6 +101,10 @@ export default function PartDetailPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      <Breadcrumb items={[
+        { label: "部件管理", href: "/parts" },
+        { label: part?.partSn ?? "加载中..." },
+      ]} />
       <div className="flex items-center gap-3 mb-6">
         <Link href="/parts"><Button variant="ghost" size="sm">&larr; 返回</Button></Link>
         <h1 className="text-2xl font-bold font-mono">{part.partSn}</h1>

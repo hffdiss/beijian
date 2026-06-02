@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BomFormDialog } from "@/components/bom-form-dialog";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface Part {
   id: string; partSn: string; description: string | null;
@@ -49,6 +50,10 @@ export default function BomDetailPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      <Breadcrumb items={[
+        { label: "BOM管理", href: "/boms" },
+        { label: bom?.bomCode ?? "加载中..." },
+      ]} />
       <div className="flex items-center gap-3 mb-6">
         <Link href="/boms"><Button variant="ghost" size="sm">&larr; 返回</Button></Link>
         <h1 className="text-2xl font-bold font-mono">{bom.bomCode}</h1>

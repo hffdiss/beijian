@@ -10,6 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { ItemFormDialog } from "@/components/item-form-dialog";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface Transaction {
   id: string;
@@ -107,6 +108,10 @@ export default function ItemDetailPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      <Breadcrumb items={[
+        { label: "物料管理", href: "/items" },
+        { label: item?.name ?? "加载中..." },
+      ]} />
       <div className="flex items-center gap-3 mb-6">
         <Link href="/items">
           <Button variant="ghost" size="sm">&larr; 返回</Button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,6 +10,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface Transaction {
   id: string;
@@ -49,6 +51,7 @@ export default function TransactionHistoryPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      <Breadcrumb items={[{ label: "出入库记录" }]} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">出入库记录</h1>
         <Select

@@ -127,4 +127,12 @@
   html {
     @apply font-sans;
   }
+
+  /* Table row hover and zebra striping */
+  tbody tr:hover {
+    @apply bg-muted/40;
+  }
+  tbody tr:nth-child(even) {
+    @apply bg-muted/20;
+  }
 }

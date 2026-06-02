@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface Machine {
   id: string;
@@ -78,6 +79,10 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      <Breadcrumb items={[
+        { label: "项目管理", href: "/projects" },
+        { label: project?.name ?? "加载中..." },
+      ]} />
       <div className="flex items-center gap-3 mb-6">
         <Link href="/projects"><Button variant="ghost" size="sm">&larr; 返回</Button></Link>
         <h1 className="text-2xl font-bold">{project.name}</h1>
