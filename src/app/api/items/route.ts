@@ -5,15 +5,27 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";
   const categoryId = searchParams.get("categoryId") ?? "";
+  const limit = parseInt(searchParams.get("limit") ?? "0");
 
   const where: Record<string, unknown> = {};
   if (q) {
-    where.OR = [
-      { name: { contains: q } },
-      { code: { contains: q } },
-      { model: { contains: q } },
-      { sn: { contains: q } },
-    ];
+    const terms = q.trim().split(/\s+/).filter((t) => t.length > 0);
+    if (terms.length > 0) {
+      where.AND = terms.map((term) => ({
+        OR: [
+          { name: { contains: term } },
+          { code: { contains: term } },
+          { model: { contains: term } },
+          { sn: { contains: term } },
+          { description: { contains: term } },
+          { manufacturer: { contains: term } },
+          { position: { contains: term } },
+          { supplier: { contains: term } },
+          { nandType: { contains: term } },
+          { compatibleProducts: { contains: term } },
+        ],
+      }));
+    }
   }
   if (categoryId) {
     where.categoryId = categoryId;
@@ -23,6 +35,7 @@ export async function GET(request: NextRequest) {
     where,
     include: { category: true },
     orderBy: { updatedAt: "desc" },
+    ...(limit > 0 ? { take: limit } : {}),
   });
   return NextResponse.json(items);
 }
