@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Breadcrumb } from "@/components/breadcrumb";
 
 interface Machine {
@@ -23,17 +24,24 @@ interface Machine {
 export default function MachinesPage() {
   const [machines, setMachines] = useState<Machine[]>([]);
   const [q, setQ] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/projects").then((r) => r.json()).then(setProjects);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
+    if (projectId) params.set("projectId", projectId);
     const res = await fetch(`/api/machines?${params}`);
     setMachines(await res.json());
     setLoading(false);
-  }, [q]);
+  }, [q, projectId]);
 
   const handleSearch = () => {
     setHasSearched(true);
@@ -60,6 +68,20 @@ export default function MachinesPage() {
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="max-w-sm"
         />
+        <Select
+          value={projectId || "null"}
+          onValueChange={(v) => { setProjectId(!v || v === "null" ? "" : v); setHasSearched(true); }}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="全部项目" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="null">全部项目</SelectItem>
+            {projects.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button variant="secondary" onClick={handleSearch}>搜索</Button>
       </div>
 
