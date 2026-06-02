@@ -62,8 +62,8 @@ export default function PartDetailPage() {
     });
     // Load reference data for selectors
     fetch("/api/projects").then((r) => r.json()).then(setProjects);
-    fetch("/api/machines?limit=300").then((r) => r.json()).then(setMachines);
-    fetch("/api/boms?limit=200").then((r) => r.json()).then((d) => setBoms(d.boms));
+    fetch("/api/machines?limit=300").then((r) => r.json()).then((d) => setMachines(Array.isArray(d) ? d : d.machines ?? []));
+    fetch("/api/boms?limit=200").then((r) => r.json()).then((d) => setBoms(d.boms ?? []));
   }, [id]);
 
   const updateForm = (key: string, value: string | number | boolean) => {
