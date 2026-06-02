@@ -26,13 +26,26 @@ export function Sidebar() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<{ username: string; role: string } | null>(null);
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (data?.user) setUser(data.user); })
       .catch(() => {});
+    // Check saved theme
+    const saved = localStorage.getItem("beijian_theme");
+    const isDark = saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setDark(isDark);
+    document.documentElement.classList.toggle("dark", isDark);
   }, []);
+
+  const toggleDark = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("beijian_theme", next ? "dark" : "light");
+  };
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -75,6 +88,9 @@ export function Sidebar() {
           <NavLinks />
         </div>
         <div className="border-t p-3 space-y-1">
+          <button onClick={toggleDark} className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted w-full text-left">
+            <span>{dark ? "☀️" : "🌙"}</span> {dark ? "亮色模式" : "暗色模式"}
+          </button>
           <a href="/api/backup" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
             <span>💾</span> 备份数据库
           </a>
@@ -122,6 +138,9 @@ export function Sidebar() {
               </div>
               <NavLinks />
               <div className="border-t mt-3 pt-3 space-y-1">
+                <button onClick={toggleDark} className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted w-full text-left">
+                  <span>{dark ? "☀️" : "🌙"}</span> {dark ? "亮色模式" : "暗色模式"}
+                </button>
                 <a href="/api/backup" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
                   <span>💾</span> 备份数据库
                 </a>

@@ -92,8 +92,10 @@ export function TransactionForm({ type }: Props) {
     setSubmitting(true);
     setSubmitError("");
 
+    const idempotencyKey = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const body = {
       type,
+      idempotencyKey,
       items: validRows.map((r) => ({
         itemId: r.itemId,
         quantity: r.quantity,

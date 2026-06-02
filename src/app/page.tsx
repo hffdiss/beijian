@@ -20,6 +20,7 @@ export default async function DashboardPage() {
     prisma.item.findMany({
       where: { safetyStock: { gt: 0 } },
       orderBy: { quantity: "asc" },
+      take: 200,
     }).then((list) => list.filter((i) => i.quantity <= i.safetyStock).slice(0, 10)),
     prisma.project.findMany({
       where: {

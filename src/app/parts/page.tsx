@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PartFormDialog } from "@/components/part-form-dialog";
+import { TableSkeleton } from "@/components/skeleton";
 
 interface PartItem {
   id: string;
@@ -33,10 +34,12 @@ export default function PartsPage() {
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const hasActiveFilter = q || spareStatus || spareWarehouse || isSpare || equipmentCategory;
 
   const load = useCallback(async () => {
+    setLoading(true);
     const params = new URLSearchParams({ page: String(page), limit: "50" });
     if (q) params.set("q", q);
     if (spareStatus) params.set("spareStatus", spareStatus);
@@ -45,6 +48,7 @@ export default function PartsPage() {
     if (equipmentCategory) params.set("equipmentCategory", equipmentCategory);
     const res = await fetch(`/api/parts?${params}`);
     setData(await res.json());
+    setLoading(false);
   }, [q, spareStatus, spareWarehouse, isSpare, equipmentCategory, page]);
 
   const handleSearch = () => {
@@ -121,7 +125,9 @@ export default function PartsPage() {
         <Button variant="secondary" onClick={handleSearch}>搜索</Button>
       </div>
 
-      {!hasSearched ? (
+      {loading ? (
+        <TableSkeleton rows={8} cols={8} />
+      ) : !hasSearched ? (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-4xl mb-4">🔍</p>
           <p className="text-lg font-medium mb-2">输入搜索条件开始查询</p>

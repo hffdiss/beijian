@@ -167,6 +167,8 @@ model Item {
   bom                Bom?          @relation(fields: [bomCode], references: [bomCode])
   transactions       Transaction[]
   stockTakes         StockTake[]
+
+  @@index([categoryId])
 }
 
 model Transaction {
@@ -180,6 +182,9 @@ model Transaction {
   batchId       String?
   createdAt     DateTime        @default(now())
   item          Item            @relation(fields: [itemId], references: [id])
+
+  @@index([itemId])
+  @@index([createdAt])
 }
 
 model StockTake {
