@@ -31,8 +31,10 @@ export function TransactionForm({ type }: Props) {
 
   // Browse panel
   const [items, setItems] = useState<ItemOption[]>([]);
+  const [itemsTotal, setItemsTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [browseLoading, setBrowseLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -46,19 +48,31 @@ export function TransactionForm({ type }: Props) {
   const [submitResult, setSubmitResult] = useState<{ batchId: string; totalItems: number; totalQty: number } | null>(null);
   const [submitError, setSubmitError] = useState("");
 
-  // Load items for browse
+  // Load items for browse (default: show all)
   useEffect(() => {
     const timer = setTimeout(async () => {
       setBrowseLoading(true);
-      const params = new URLSearchParams({ limit: "50" });
+      const params = new URLSearchParams({ limit: "100" });
       if (search) params.set("q", search);
       const res = await fetch(`/api/items?${params}`);
       const json = await res.json();
-      setItems(Array.isArray(json) ? json : json.items ?? []);
+      const list = Array.isArray(json) ? json : json.items ?? [];
+      setItems(list);
+      setItemsTotal(typeof json.total === "number" ? json.total : list.length);
       setBrowseLoading(false);
     }, 250);
     return () => clearTimeout(timer);
   }, [search]);
+
+  const handleGenerateItems = async () => {
+    setGenerating(true);
+    const res = await fetch("/api/items/generate", { method: "POST" });
+    const data = await res.json();
+    toast.success(`已生成 ${data.created} 个物料${data.skipped > 0 ? `，${data.skipped} 个已跳过` : ""}`);
+    setGenerating(false);
+    // Refresh item list
+    setSearch("");
+  };
 
   // Cart operations
   const addToCart = (item: ItemOption) => {
@@ -132,10 +146,10 @@ export function TransactionForm({ type }: Props) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">物料列表</CardTitle>
-              <span className="text-xs text-muted-foreground">{items.length} 种</span>
+              <span className="text-xs text-muted-foreground">{itemsTotal > 0 ? `共 ${itemsTotal} 种` : "空"}</span>
             </div>
             <Input
-              placeholder="搜索名称/编号..."
+              placeholder="搜索名称/编号/型号..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="mt-2"
@@ -147,7 +161,21 @@ export function TransactionForm({ type }: Props) {
               {browseLoading ? (
                 <div className="p-4 text-center text-sm text-muted-foreground">搜索中...</div>
               ) : items.length === 0 ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">{search ? "无匹配物料" : "输入关键词搜索"}</div>
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  {search ? (
+                    "无匹配物料"
+                  ) : itemsTotal === 0 ? (
+                    <div className="py-4">
+                      <p className="mb-3">物料库为空，需要先创建物料</p>
+                      <Button variant="outline" size="sm" onClick={handleGenerateItems} disabled={generating}>
+                        {generating ? "生成中..." : "🪄 从部件批量生成"}
+                      </Button>
+                      <p className="text-xs mt-2 text-muted-foreground">将按部件类别自动创建物料</p>
+                    </div>
+                  ) : (
+                    "输入关键词搜索"
+                  )}
+                </div>
               ) : (
                 items.map((item) => {
                   const inCart = cart.find((c) => c.itemId === item.id);
