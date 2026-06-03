@@ -5,18 +5,46 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type") ?? "";
   const itemId = searchParams.get("itemId") ?? "";
+  const q = searchParams.get("q") ?? "";
+  const dateFrom = searchParams.get("dateFrom") ?? "";
+  const dateTo = searchParams.get("dateTo") ?? "";
+  const isStats = searchParams.get("stats") === "1";
+  const sort = searchParams.get("sort") ?? "createdAt";
+  const dir = (searchParams.get("dir") ?? "desc") === "desc" ? "desc" : "asc";
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "50");
 
   const where: Record<string, unknown> = {};
   if (type) where.type = type;
   if (itemId) where.itemId = itemId;
+  if (q) where.item = { name: { contains: q } };
+  if (dateFrom || dateTo) {
+    where.createdAt = {};
+    if (dateFrom) (where.createdAt as Record<string, unknown>).gte = new Date(dateFrom);
+    if (dateTo) (where.createdAt as Record<string, unknown>).lte = new Date(dateTo + "T23:59:59");
+  }
+
+  // Stats mode: return aggregate counts
+  if (isStats) {
+    const [inData, outData] = await Promise.all([
+      prisma.transaction.aggregate({ where: { ...where, type: "IN" }, _count: true, _sum: { quantity: true } }),
+      prisma.transaction.aggregate({ where: { ...where, type: "OUT" }, _count: true, _sum: { quantity: true } }),
+    ]);
+    return NextResponse.json({
+      inCount: inData._count, outCount: outData._count,
+      inQty: inData._sum.quantity ?? 0, outQty: outData._sum.quantity ?? 0,
+    });
+  }
+
+  const sortMap: Record<string, Record<string, string>> = {
+    createdAt: { createdAt: dir },
+  };
 
   const [transactions, total] = await Promise.all([
     prisma.transaction.findMany({
       where,
       include: { item: { select: { id: true, code: true, name: true, unit: true } } },
-      orderBy: { createdAt: "desc" },
+      orderBy: sortMap[sort] ?? { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
     }),
