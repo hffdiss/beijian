@@ -36,16 +36,24 @@ export default function BomsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BomItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState("bomCode");
+  const [dir, setDir] = useState<"asc" | "desc">("asc");
+
+  const toggleSort = (field: string) => {
+    if (sort === field) { setDir((d) => (d === "asc" ? "desc" : "asc")); }
+    else { setSort(field); setDir("asc"); }
+    setPage(1);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    const params = new URLSearchParams({ page: String(page), limit: String(limit), sort, dir });
     if (q) params.set("q", q);
     if (materialCategory) params.set("materialCategory", materialCategory);
     const res = await fetch(`/api/boms?${params}`);
     setData(await res.json());
     setLoading(false);
-  }, [q, materialCategory, page, limit]);
+  }, [q, materialCategory, page, limit, sort, dir]);
 
   const handleSearch = () => {
     setPage(1);
@@ -65,6 +73,23 @@ export default function BomsPage() {
   };
 
   const totalPages = Math.ceil(data.total / limit);
+
+  const SortHead = ({ field, label }: { field: string; label: string }) => (
+    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => toggleSort(field)}>
+      <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
+    </TableHead>
+  );
+
+  // Client-side sort for count fields
+  const sortedData = { ...data };
+  if ((sort === "parts" || sort === "items") && data.boms.length > 0) {
+    sortedData.boms = [...data.boms].sort((a, b) => {
+      const va = sort === "parts" ? a._count.parts : a._count.items;
+      const vb = sort === "parts" ? b._count.parts : b._count.items;
+      return dir === "asc" ? va - vb : vb - va;
+    });
+  }
+  const displayBoms = (sort === "parts" || sort === "items") ? sortedData.boms : data.boms;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -112,19 +137,19 @@ export default function BomsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>BBOM编码</TableHead>
-                  <TableHead>名称</TableHead>
-                  <TableHead>型号</TableHead>
-                  <TableHead>物料类别</TableHead>
-                  <TableHead>厂商</TableHead>
-                  <TableHead>单位</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>关联数</TableHead>
+                  <SortHead field="bomCode" label="BBOM编码" />
+                  <SortHead field="name" label="名称" />
+                  <SortHead field="model" label="型号" />
+                  <SortHead field="materialCategory" label="物料类别" />
+                  <SortHead field="manufacturer" label="厂商" />
+                  <SortHead field="unit" label="单位" />
+                  <SortHead field="status" label="状态" />
+                  <SortHead field="parts" label="关联数" />
                   <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.boms.map((b) => (
+                {displayBoms.map((b) => (
                   <TableRow key={b.id}>
                     <TableCell className="font-mono text-sm">
                       <Link href={`/boms/${b.id}`} className="hover:underline">{b.bomCode}</Link>
@@ -154,7 +179,7 @@ export default function BomsPage() {
           </div>
 
           <div className="md:hidden space-y-3">
-            {data.boms.map((b) => (
+            {displayBoms.map((b) => (
               <Card key={b.id}>
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">

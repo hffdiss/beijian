@@ -31,11 +31,23 @@ export async function GET(request: NextRequest) {
   }
   if (materialCategory) where.materialCategory = materialCategory;
 
+  const sort = searchParams.get("sort") ?? "bomCode";
+  const dir = (searchParams.get("dir") ?? "asc") === "desc" ? "desc" : "asc";
+  const sortMap: Record<string, Record<string, string>> = {
+    bomCode: { bomCode: dir },
+    name: { name: dir },
+    model: { model: dir },
+    materialCategory: { materialCategory: dir },
+    manufacturer: { manufacturer: dir },
+    unit: { unit: dir },
+    status: { status: dir },
+  };
+
   const [boms, total] = await Promise.all([
     prisma.bom.findMany({
       where,
       include: { _count: { select: { parts: true, items: true } } },
-      orderBy: { bomCode: "asc" },
+      orderBy: sortMap[sort] ?? { bomCode: "asc" },
       skip: (page - 1) * limit,
       take: limit,
     }),

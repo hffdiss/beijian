@@ -57,17 +57,25 @@ export default function ItemsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState("updatedAt");
+  const [dir, setDir] = useState<"asc" | "desc">("desc");
+
+  const toggleSort = (field: string) => {
+    if (sort === field) { setDir((d) => (d === "asc" ? "desc" : "asc")); }
+    else { setSort(field); setDir("asc"); }
+    setPage(1);
+  };
 
   const loadItems = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    const params = new URLSearchParams({ page: String(page), limit: String(limit), sort, dir });
     if (q) params.set("q", q);
     if (categoryId) params.set("categoryId", categoryId);
     const res = await fetch(`/api/items?${params}`);
     const json = await res.json();
     setData(Array.isArray(json) ? { items: json, total: json.length } : json);
     setLoading(false);
-  }, [q, categoryId, page, limit]);
+  }, [q, categoryId, page, limit, sort, dir]);
 
   const loadCategories = async () => {
     fetch("/api/categories").then((r) => r.json()).then(setCategories);
@@ -100,6 +108,12 @@ export default function ItemsPage() {
   });
 
   const totalPages = Math.ceil(data.total / limit);
+
+  const SortHead = ({ field, label }: { field: string; label: string }) => (
+    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => toggleSort(field)}>
+      <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
+    </TableHead>
+  );
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -142,13 +156,13 @@ export default function ItemsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>编号</TableHead>
-                  <TableHead>名称</TableHead>
-                  <TableHead>型号</TableHead>
-                  <TableHead>分类</TableHead>
+                  <SortHead field="code" label="编号" />
+                  <SortHead field="name" label="名称" />
+                  <SortHead field="model" label="型号" />
+                  <SortHead field="category" label="分类" />
                   <TableHead>BOM</TableHead>
-                  <TableHead>库存</TableHead>
-                  <TableHead>位置</TableHead>
+                  <SortHead field="quantity" label="库存" />
+                  <SortHead field="position" label="位置" />
                   <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>

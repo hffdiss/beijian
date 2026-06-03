@@ -32,6 +32,18 @@ export async function GET(request: NextRequest) {
     where.categoryId = categoryId;
   }
 
+  const sort = searchParams.get("sort") ?? "updatedAt";
+  const dir = (searchParams.get("dir") ?? "desc") === "desc" ? "desc" : "asc";
+  const sortMap: Record<string, Record<string, string>> = {
+    code: { code: dir },
+    name: { name: dir },
+    model: { model: dir },
+    category: { category: { name: dir } },
+    quantity: { quantity: dir },
+    position: { position: dir },
+    updatedAt: { updatedAt: dir },
+  };
+
   const effectiveLimit = limit > 0 ? limit : 50;
   const skip = (page - 1) * effectiveLimit;
 
@@ -39,7 +51,7 @@ export async function GET(request: NextRequest) {
     prisma.item.findMany({
       where,
       include: { category: true },
-      orderBy: { updatedAt: "desc" },
+      orderBy: sortMap[sort] ?? { updatedAt: "desc" },
       skip,
       take: effectiveLimit,
     }),
