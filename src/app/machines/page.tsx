@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { TableSkeleton } from "@/components/skeleton";
+import { useToast } from "@/components/toast";
+import { MachineFormDialog } from "@/components/machine-form-dialog";
 import { Pagination } from "@/components/pagination";
 
 interface Machine {
