@@ -82,6 +82,56 @@ export async function POST() {
   }
 }
 
+// PUT: restore a backup
+export async function PUT(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const name = searchParams.get("name") ?? "";
+  if (!name) {
+    // Upload restore: accept file upload
+    const contentType = request.headers.get("content-type") ?? "";
+    if (contentType.includes("multipart/form-data")) {
+      try {
+        const formData = await request.formData();
+        const file = formData.get("file");
+        if (!file || !(file instanceof File)) {
+          return NextResponse.json({ error: "请选择备份文件" }, { status: 400 });
+        }
+        // Backup current DB first
+        mkdirSync(BACKUP_DIR, { recursive: true });
+        if (existsSync(DB_PATH)) {
+          const date = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+          writeFileSync(path.join(BACKUP_DIR, `pre-restore-${date}.db`), readFileSync(DB_PATH));
+        }
+        // Restore
+        const buf = Buffer.from(await file.arrayBuffer());
+        writeFileSync(DB_PATH, buf);
+        return NextResponse.json({ success: true, message: "数据库已恢复" });
+      } catch (e) {
+        return NextResponse.json({ error: "恢复失败" }, { status: 500 });
+      }
+    }
+    return NextResponse.json({ error: "缺少备份文件名或文件" }, { status: 400 });
+  }
+
+  // Restore from named backup
+  const backupPath = path.join(BACKUP_DIR, name);
+  if (!existsSync(backupPath)) {
+    return NextResponse.json({ error: "备份文件不存在" }, { status: 404 });
+  }
+  try {
+    // Backup current first
+    mkdirSync(BACKUP_DIR, { recursive: true });
+    if (existsSync(DB_PATH)) {
+      const date = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      writeFileSync(path.join(BACKUP_DIR, `pre-restore-${date}.db`), readFileSync(DB_PATH));
+    }
+    writeFileSync(DB_PATH, readFileSync(backupPath));
+    return NextResponse.json({ success: true, message: `已从 "${name}" 恢复` });
+  } catch {
+    return NextResponse.json({ error: "恢复失败" }, { status: 500 });
+  }
+}
+
 // DELETE: delete a backup
 export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
