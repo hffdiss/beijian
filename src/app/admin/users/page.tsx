@@ -53,8 +53,11 @@ export default function AdminUsersPage() {
     fetch("/api/auth/me").then((r) => (r.ok ? r.json() : null)).then((data) => {
       if (data?.user) { setUser(data.user); setUsername(data.user.username); }
     }).finally(() => setLoading(false));
-    if (user?.role === "admin") loadUsers();
   }, []);
+
+  useEffect(() => {
+    if (user?.role === "admin") loadUsers();
+  }, [user?.role]);
 
   const loadUsers = async () => {
     const res = await fetch("/api/admin/users");
