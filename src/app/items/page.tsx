@@ -93,7 +93,7 @@ export default function ItemsPage() {
   const handleDelete = async (item: Item) => {
     if (!confirm(`确定删除物料 "${item.name}"？`)) return;
     const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
-    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+    if (!res.ok) { const err = await res.json(); toast.error(err.error); return; }
     loadItems();
   };
 

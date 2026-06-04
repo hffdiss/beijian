@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { useToast } from "@/components/toast";
+import { DetailSkeleton } from "@/components/skeleton";
 
 interface Machine {
   id: string;
@@ -44,6 +46,7 @@ interface Project {
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const toast = useToast();
   const [project, setProject] = useState<Project | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -61,21 +64,21 @@ export default function ProjectDetailPage() {
     setSaving(true);
     try {
       const res = await fetch(`/api/projects/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-      if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+      if (!res.ok) { const err = await res.json(); toast.error(err.error);; return; }
       setEditing(false);
       load();
-    } catch { alert("保存失败"); }
+    } catch { toast.error("保存失败"); }
     finally { setSaving(false); }
   };
 
   const handleDelete = async () => {
     if (!confirm("确定删除该项目？此操作不可撤销。")) return;
     const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
-    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+    if (!res.ok) { const err = await res.json(); toast.error(err.error);; return; }
     router.push("/projects");
   };
 
-  if (!project) return <div className="p-6">加载中...</div>;
+  if (!project) return <div className="p-6 max-w-6xl mx-auto"><DetailSkeleton /></div>;
 
   return (
     <div className="p-6 max-w-6xl mx-auto">

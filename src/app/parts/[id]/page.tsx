@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { useToast } from "@/components/toast";
+import { DetailSkeleton } from "@/components/skeleton";
 
 interface PartDetail {
   id: string; partSn: string;
@@ -37,6 +39,7 @@ interface BomOption { id: string; bomCode: string; name: string | null; }
 export default function PartDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const toast = useToast();
   const [part, setPart] = useState<PartDetail | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -78,11 +81,12 @@ export default function PartDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+      if (!res.ok) { const err = await res.json(); toast.error(err.error); return; }
       const updated = await res.json();
       setPart((prev) => prev ? { ...prev, ...updated, project: updated.project ?? prev.project, machine: updated.machine ?? prev.machine, bom: updated.bom ?? prev.bom } : prev);
       setEditing(false);
-    } catch { alert("保存失败"); }
+      toast.success("保存成功");
+    } catch { toast.error("保存失败"); }
     finally { setSaving(false); }
   };
 
@@ -90,12 +94,13 @@ export default function PartDetailPage() {
     if (!confirm("确定删除该部件？此操作不可撤销。")) return;
     try {
       const res = await fetch(`/api/parts/${id}`, { method: "DELETE" });
-      if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+      if (!res.ok) { const err = await res.json(); toast.error(err.error); return; }
+      toast.success("已删除");
       router.push("/parts");
-    } catch { alert("删除失败"); }
+    } catch { toast.error("删除失败"); }
   };
 
-  if (!part) return <div className="p-6">加载中...</div>;
+  if (!part) return <div className="p-6 max-w-5xl mx-auto"><DetailSkeleton /></div>;
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString("zh-CN") : "-";
 

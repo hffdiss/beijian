@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BomFormDialog } from "@/components/bom-form-dialog";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { useToast } from "@/components/toast";
+import { DetailSkeleton } from "@/components/skeleton";
 
 interface Part {
   id: string; partSn: string; description: string | null;
@@ -33,6 +35,7 @@ interface BomDetail {
 export default function BomDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const toast = useToast();
   const [bom, setBom] = useState<BomDetail | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -42,11 +45,11 @@ export default function BomDetailPage() {
   const handleDelete = async () => {
     if (!confirm("确定删除该BOM？此操作不可撤销。")) return;
     const res = await fetch(`/api/boms/${id}`, { method: "DELETE" });
-    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+    if (!res.ok) { const err = await res.json(); toast.error(err.error); return; }
     router.push("/boms");
   };
 
-  if (!bom) return <div className="p-6">加载中...</div>;
+  if (!bom) return <div className="p-6 max-w-5xl mx-auto"><DetailSkeleton /></div>;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">

@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/table";
 import { ItemFormDialog } from "@/components/item-form-dialog";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { useToast } from "@/components/toast";
+import { DetailSkeleton } from "@/components/skeleton";
 
 interface Transaction {
   id: string;
@@ -54,6 +56,7 @@ interface Category {
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const toast = useToast();
   const [item, setItem] = useState<Item | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -76,7 +79,7 @@ export default function ItemDetailPage() {
   const handleDelete = async () => {
     if (!confirm("确定删除该物料？此操作不可撤销。")) return;
     const res = await fetch(`/api/items/${id}`, { method: "DELETE" });
-    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+    if (!res.ok) { const err = await res.json(); toast.error(err.error); return; }
     router.push("/items");
   };
 
@@ -91,7 +94,7 @@ export default function ItemDetailPage() {
     );
   }
 
-  if (!item) return <div className="p-6">加载中...</div>;
+  if (!item) return <div className="p-6 max-w-5xl mx-auto"><DetailSkeleton /></div>;
 
   const formatDate = (d: string | null) =>
     d ? new Date(d).toLocaleDateString("zh-CN") : "-";

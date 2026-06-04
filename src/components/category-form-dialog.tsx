@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/toast";
 
 interface Category {
   id: string;
@@ -31,6 +32,7 @@ export function CategoryFormDialog({
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState<string | null>(null);
   const [description, setDescription] = useState("");
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -58,15 +60,11 @@ export function CategoryFormDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim(), parentId: parentId || null, description }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || "保存失败");
-        return;
-      }
+      if (!res.ok) { const err = await res.json(); toast.error(err.error || "保存失败"); return; }
       onOpenChange(false);
       onSaved();
-    } catch {
-      alert("网络错误，保存失败");
+      toast.success("保存成功");
+    } catch { toast.error("网络错误");
     } finally {
       setSaving(false);
     }

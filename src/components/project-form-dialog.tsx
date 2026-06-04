@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/toast";
 
 interface ProjectItem {
   id?: string;
@@ -24,6 +25,7 @@ interface Props {
 
 export function ProjectFormDialog({ open, onOpenChange, project, onSaved }: Props) {
   const [form, setForm] = useState({ name: "", city: "", contractNumber: "", oem: "", projectSla: "", remark: "" });
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -52,10 +54,11 @@ export function ProjectFormDialog({ open, onOpenChange, project, onSaved }: Prop
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+      if (!res.ok) { const err = await res.json(); toast.error(err.error); return; }
       onOpenChange(false);
       onSaved();
-    } catch { alert("保存失败"); }
+      toast.success("保存成功");
+    } catch { toast.error("保存失败"); }
     finally { setSaving(false); }
   };
 

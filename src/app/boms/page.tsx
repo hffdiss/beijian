@@ -68,7 +68,7 @@ export default function BomsPage() {
   const handleDelete = async (bom: BomItem) => {
     if (!confirm(`确定删除 "${bom.bomCode}"？`)) return;
     const res = await fetch(`/api/boms/${bom.id}`, { method: "DELETE" });
-    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+    if (!res.ok) { const err = await res.json(); toast.error(err.error); return; }
     load();
   };
 

@@ -11,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/toast";
 
 interface Item {
   id?: string;
@@ -61,6 +62,7 @@ export function ItemFormDialog({
   } as Item;
 
   const [form, setForm] = useState<Item>(emptyForm);
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
   const [bomList, setBomList] = useState<{ id: string; bomCode: string; name: string | null }[]>([]);
 
@@ -103,15 +105,11 @@ export function ItemFormDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || "保存失败");
-        return;
-      }
+      if (!res.ok) { const err = await res.json(); toast.error(err.error || "保存失败"); return; }
       onOpenChange(false);
       onSaved();
-    } catch {
-      alert("网络错误，保存失败");
+      toast.success("保存成功");
+    } catch { toast.error("网络错误");
     } finally {
       setSaving(false);
     }

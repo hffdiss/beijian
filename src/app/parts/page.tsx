@@ -293,7 +293,7 @@ export default function PartsPage() {
                         <Button variant="ghost" size="sm" onClick={() => {
                           if (!confirm(`确定删除 "${p.partSn}"？`)) return;
                           fetch(`/api/parts/${p.id}`, { method: "DELETE" }).then((r) => {
-                            if (!r.ok) r.json().then((e: { error: string }) => alert(e.error));
+                            if (!r.ok) r.json().then((e: { error: string }) => toast.error(e.error));
                             else load();
                           });
                         }}>删除</Button>

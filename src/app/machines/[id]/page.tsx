@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { useToast } from "@/components/toast";
+import { DetailSkeleton } from "@/components/skeleton";
 
 interface PartItem {
   id: string; partSn: string; description: string | null;
@@ -30,6 +32,7 @@ interface ProjectOption { id: string; name: string; }
 export default function MachineDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const toast = useToast();
   const [machine, setMachine] = useState<Machine | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -62,21 +65,21 @@ export default function MachineDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+      if (!res.ok) { const err = await res.json(); toast.error(err.error);; return; }
       setEditing(false);
       load();
-    } catch { alert("保存失败"); }
+    } catch { toast.error("保存失败"); }
     finally { setSaving(false); }
   };
 
   const handleDelete = async () => {
     if (!confirm("确定删除该机器？此操作不可撤销。")) return;
     const res = await fetch(`/api/machines/${id}`, { method: "DELETE" });
-    if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+    if (!res.ok) { const err = await res.json(); toast.error(err.error);; return; }
     router.push("/machines");
   };
 
-  if (!machine) return <div className="p-6">加载中...</div>;
+  if (!machine) return <div className="p-6 max-w-6xl mx-auto"><DetailSkeleton /></div>;
 
   return (
     <div className="p-6 max-w-6xl mx-auto">

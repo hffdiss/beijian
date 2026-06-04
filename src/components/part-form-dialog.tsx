@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/toast";
 
 interface SelectOption { id: string; name: string; }
 interface MachineOption { id: string; machineSn: string; product: string | null; }
@@ -23,6 +24,7 @@ export function PartFormDialog({ open, onOpenChange, onSaved }: Props) {
     spareStatus: "", spareWarehouse: "", spareQuantity: 0,
     isSpare: false,
   });
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
   const [projects, setProjects] = useState<SelectOption[]>([]);
   const [machines, setMachines] = useState<MachineOption[]>([]);
@@ -45,11 +47,12 @@ export function PartFormDialog({ open, onOpenChange, onSaved }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) { const err = await res.json(); alert(err.error || "保存失败"); return; }
+      if (!res.ok) { const err = await res.json(); toast.error(err.error || "保存失败"); return; }
       onOpenChange(false);
       onSaved();
       setForm({ partSn: "", description: "", model: "", equipmentCategory: "", projectId: "", machineId: "", bomCode: "", spareStatus: "", spareWarehouse: "", spareQuantity: 0, isSpare: false });
-    } catch { alert("保存失败"); }
+      toast.success("部件已创建");
+    } catch { toast.error("保存失败"); }
     finally { setSaving(false); }
   };
 

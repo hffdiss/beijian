@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/toast";
 
 interface BomItem {
   id?: string;
@@ -44,6 +45,7 @@ export function BomFormDialog({ open, onOpenChange, bom, onSaved }: Props) {
     nandType: "", firmwareVersion: "", lifecycle: "", supplier: "",
     detailDescription: "", processCode: "", status: "", isSpare: false, remark: "",
   });
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -97,15 +99,11 @@ export function BomFormDialog({ open, onOpenChange, bom, onSaved }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || "保存失败");
-        return;
-      }
+      if (!res.ok) { const err = await res.json(); toast.error(err.error || "保存失败"); return; }
       onOpenChange(false);
       onSaved();
-    } catch {
-      alert("网络错误，保存失败");
+      toast.success("保存成功");
+    } catch { toast.error("网络错误");
     } finally {
       setSaving(false);
     }
