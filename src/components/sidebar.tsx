@@ -18,8 +18,6 @@ const baseNavItems = [
   { href: "/transactions/history", label: "出入库记录", icon: "🔄" },
   { href: "/stocktake", label: "盘点", icon: "📊" },
   { href: "/categories", label: "分类管理", icon: "🗂️" },
-  { href: "/import", label: "数据导入", icon: "📄" },
-  { href: "/backups", label: "备份管理", icon: "💾" },
   { href: "/settings", label: "用户设置", icon: "👤" },
 ];
 
@@ -94,11 +92,14 @@ export function Sidebar() {
           <button onClick={toggleDark} className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted w-full text-left">
             <span>{dark ? "☀️" : "🌙"}</span> {dark ? "亮色模式" : "暗色模式"}
           </button>
-          <a href="/api/backup" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
-            <span>💾</span> 备份数据库
-          </a>
+          <Link href="/import" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
+            <span>📄</span> 数据导入
+          </Link>
+          <Link href="/backups" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
+            <span>💾</span> 备份管理
+          </Link>
           <a href="/api/items/export" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
-            <span>📄</span> 导出 CSV
+            <span>📥</span> 导出 CSV
           </a>
         </div>
         {user && (
@@ -144,11 +145,14 @@ export function Sidebar() {
                 <button onClick={toggleDark} className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted w-full text-left">
                   <span>{dark ? "☀️" : "🌙"}</span> {dark ? "亮色模式" : "暗色模式"}
                 </button>
-                <a href="/api/backup" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
-                  <span>💾</span> 备份数据库
-                </a>
+                <Link href="/import" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
+                  <span>📄</span> 数据导入
+                </Link>
+                <Link href="/backups" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
+                  <span>💾</span> 备份管理
+                </Link>
                 <a href="/api/items/export" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
-                  <span>📄</span> 导出 CSV
+                  <span>📥</span> 导出 CSV
                 </a>
               </div>
               {user && (
