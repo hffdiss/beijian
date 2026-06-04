@@ -98,13 +98,8 @@ export function Sidebar() {
           <a href="/api/items/export" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
             <span>📥</span> 导出 CSV
           </a>
-          {user?.role === "admin" && (
-            <Link href="/admin/users" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
-              <span>👥</span> 用户管理
-            </Link>
-          )}
-          <Link href="/settings" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
-            <span>👤</span> 用户设置
+          <Link href="/admin/users" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
+            <span>👤</span> 用户管理
           </Link>
         </div>
         {user && (
@@ -159,8 +154,8 @@ export function Sidebar() {
                 <a href="/api/items/export" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
                   <span>📥</span> 导出 CSV
                 </a>
-                <Link href="/settings" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
-                  <span>👤</span> 用户设置
+                <Link href="/admin/users" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
+                  <span>👤</span> 用户管理
                 </Link>
               </div>
               {user && (
