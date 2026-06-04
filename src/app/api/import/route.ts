@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { importFromXlsx } from "@/lib/excel";
-import { writeFileSync, unlinkSync, mkdirSync } from "fs";
+import { writeFileSync, unlinkSync, mkdirSync, readFileSync, existsSync } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
+    // Pre-import backup
+    const dbPath = path.join(process.cwd(), "prisma", "dev.db");
+    if (existsSync(dbPath)) {
+      try {
+        const backupDir = path.join(process.cwd(), "backups");
+        mkdirSync(backupDir, { recursive: true });
+        const date = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+        writeFileSync(path.join(backupDir, `pre-import-${date}.db`), readFileSync(dbPath));
+      } catch { /* non-critical */ }
+    }
+
     let filePath = path.join(process.cwd(), "beijian.xlsx");
     let isTemp = false;
 

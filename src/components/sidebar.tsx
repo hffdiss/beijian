@@ -19,6 +19,7 @@ const baseNavItems = [
   { href: "/stocktake", label: "盘点", icon: "📊" },
   { href: "/categories", label: "分类管理", icon: "🗂️" },
   { href: "/import", label: "数据导入", icon: "📄" },
+  { href: "/backups", label: "备份管理", icon: "💾" },
   { href: "/settings", label: "用户设置", icon: "👤" },
 ];
 
