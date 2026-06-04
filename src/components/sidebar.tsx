@@ -18,7 +18,6 @@ const baseNavItems = [
   { href: "/transactions/history", label: "出入库记录", icon: "🔄" },
   { href: "/stocktake", label: "盘点", icon: "📊" },
   { href: "/categories", label: "分类管理", icon: "🗂️" },
-  { href: "/settings", label: "用户设置", icon: "👤" },
 ];
 
 export function Sidebar() {
@@ -101,6 +100,9 @@ export function Sidebar() {
           <a href="/api/items/export" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
             <span>📥</span> 导出 CSV
           </a>
+          <Link href="/settings" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
+            <span>👤</span> 用户设置
+          </Link>
         </div>
         {user && (
           <div className="border-t p-3">
@@ -154,6 +156,9 @@ export function Sidebar() {
                 <a href="/api/items/export" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
                   <span>📥</span> 导出 CSV
                 </a>
+                <Link href="/settings" className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted">
+                  <span>👤</span> 用户设置
+                </Link>
               </div>
               {user && (
                 <div className="border-t mt-3 pt-3">
