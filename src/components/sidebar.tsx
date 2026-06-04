@@ -51,9 +51,7 @@ export function Sidebar() {
     router.push("/login");
   };
 
-  const navItems = user?.role === "admin"
-    ? [...baseNavItems, { href: "/admin/users", label: "用户管理", icon: "👥" }]
-    : baseNavItems;
+  const navItems = baseNavItems;
 
   const NavLinks = () => (
     <nav className="space-y-1">
