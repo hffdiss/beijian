@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { useToast } from "@/components/toast";
 
 interface ImportResult {
   projects: number;
@@ -17,19 +18,39 @@ interface ImportResult {
 }
 
 export default function ImportPage() {
+  const toast = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [useUpload, setUseUpload] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      setUseUpload(true);
+    }
+  };
 
   const handleImport = async () => {
     setConfirmOpen(false);
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch("/api/import", { method: "POST" });
-      const data = await res.json();
-      setResult(data);
+      if (useUpload && uploadedFile) {
+        const formData = new FormData();
+        formData.append("file", uploadedFile);
+        const res = await fetch("/api/import", { method: "POST", body: formData });
+        const data = await res.json();
+        setResult(data);
+      } else {
+        const res = await fetch("/api/import", { method: "POST" });
+        const data = await res.json();
+        setResult(data);
+      }
     } catch {
       setResult({ projects: 0, machines: 0, boms: 0, parts: 0, errors: ["网络错误"], error: undefined });
     } finally {
@@ -42,18 +63,64 @@ export default function ImportPage() {
       <Breadcrumb items={[{ label: "数据导入" }]} />
       <h1 className="text-2xl font-bold mb-6">数据导入</h1>
 
+      {/* Download template */}
+      <Card className="mb-4">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">📋 导入模板</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-3">
+            下载标准模板，按格式填写数据后上传导入。模板包含两个 Sheet 的表头。
+          </p>
+          <a href="/api/import/template" download>
+            <Button variant="outline">📥 下载模板</Button>
+          </a>
+        </CardContent>
+      </Card>
+
+      {/* Import */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>从 beijian.xlsx 导入数据</CardTitle>
+          <CardTitle>导入数据</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm mb-4">
-            将从项目目录下的 <code className="bg-muted px-1 py-0.5 rounded text-xs">beijian.xlsx</code> 文件中导入两个工作表的数据：
+            默认从项目目录下的 <code className="bg-muted px-1 py-0.5 rounded text-xs">beijian.xlsx</code> 导入。
+            也可上传自定义文件。
           </p>
+
+          {/* File upload */}
+          <div className="mb-4">
+            <label className="text-sm font-medium block mb-2">上传文件（可选）</label>
+            <div className="flex items-center gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                className="text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+              />
+              {uploadedFile && (
+                <span className="text-sm text-muted-foreground">
+                  {uploadedFile.name} ({(uploadedFile.size / 1024).toFixed(0)} KB)
+                </span>
+              )}
+              {useUpload && (
+                <Button variant="ghost" size="sm" onClick={() => { setUploadedFile(null); setUseUpload(false); if (fileInputRef.current) fileInputRef.current.value = ""; }}>
+                  清除
+                </Button>
+              )}
+            </div>
+            {useUpload && (
+              <p className="text-xs text-muted-foreground mt-1">将使用上传的文件进行导入</p>
+            )}
+          </div>
+
           <ul className="text-sm text-muted-foreground mb-4 space-y-1 ml-4 list-disc">
             <li><strong>新增BOM</strong> — BOM 主数据（编码、物料分类、型号等）</li>
             <li><strong>发货项目清单(含BBOM SN)</strong> — 项目、机器、部件 SN 级记录</li>
           </ul>
+
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
             <p className="text-sm text-amber-800">
               ⚠️ 导入将覆盖已有数据。已存在的项目、机器、BOM 和部件会被 Excel 中的最新数据更新。
@@ -62,12 +129,8 @@ export default function ImportPage() {
           </div>
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={confirmed}
-                onChange={(e) => setConfirmed(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300"
-              />
+              <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300" />
               我已确认，了解此操作将覆盖现有数据
             </label>
           </div>
@@ -81,78 +144,44 @@ export default function ImportPage() {
 
       {result && !result.error && (
         <Card>
-          <CardHeader>
-            <CardTitle>导入结果</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>导入结果</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-3xl font-bold">{result.projects}</p>
-                <p className="text-sm text-muted-foreground">项目</p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-3xl font-bold">{result.machines}</p>
-                <p className="text-sm text-muted-foreground">机器</p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-3xl font-bold">{result.boms}</p>
-                <p className="text-sm text-muted-foreground">BOM</p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-3xl font-bold">{result.parts}</p>
-                <p className="text-sm text-muted-foreground">部件</p>
-              </div>
+              <div className="text-center p-4 bg-muted rounded-lg"><p className="text-3xl font-bold">{result.projects}</p><p className="text-sm text-muted-foreground">项目</p></div>
+              <div className="text-center p-4 bg-muted rounded-lg"><p className="text-3xl font-bold">{result.machines}</p><p className="text-sm text-muted-foreground">机器</p></div>
+              <div className="text-center p-4 bg-muted rounded-lg"><p className="text-3xl font-bold">{result.boms}</p><p className="text-sm text-muted-foreground">BOM</p></div>
+              <div className="text-center p-4 bg-muted rounded-lg"><p className="text-3xl font-bold">{result.parts}</p><p className="text-sm text-muted-foreground">部件</p></div>
             </div>
-
             {result.errors.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-destructive mb-2">
-                  导入错误 ({result.errors.length})
-                </p>
+                <p className="text-sm font-medium text-destructive mb-2">导入错误 ({result.errors.length})</p>
                 <div className="max-h-48 overflow-y-auto space-y-1">
                   {result.errors.slice(0, 20).map((err, i) => (
-                    <p key={i} className="text-xs text-muted-foreground font-mono">
-                      {err}
-                    </p>
+                    <p key={i} className="text-xs text-muted-foreground font-mono">{err}</p>
                   ))}
-                  {result.errors.length > 20 && (
-                    <p className="text-xs text-muted-foreground">
-                      ... 还有 {result.errors.length - 20} 条错误
-                    </p>
-                  )}
+                  {result.errors.length > 20 && <p className="text-xs text-muted-foreground">... 还有 {result.errors.length - 20} 条错误</p>}
                 </div>
               </div>
             )}
-
-            {result.errors.length === 0 && (
-              <Badge variant="default">导入完成，无错误</Badge>
-            )}
+            {result.errors.length === 0 && <Badge variant="default">导入完成，无错误</Badge>}
           </CardContent>
         </Card>
       )}
 
       {result?.error && (
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-destructive">{result.error}</p>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-4"><p className="text-destructive">{result.error}</p></CardContent></Card>
       )}
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>确认导入</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>确认导入</DialogTitle></DialogHeader>
           <div className="space-y-3 text-sm">
-            <p>即将从 <code className="bg-muted px-1 py-0.5 rounded text-xs">beijian.xlsx</code> 执行数据导入：</p>
+            <p>即将导入数据{useUpload ? `（文件：${uploadedFile?.name}）` : "（beijian.xlsx）"}：</p>
             <ul className="space-y-1 ml-4 list-disc text-muted-foreground">
               <li>Sheet「新增BOM」→ BOM 主数据</li>
               <li>Sheet「发货项目清单」→ 项目 / 机器 / 部件</li>
             </ul>
-            <p className="text-amber-600 font-medium">
-              已存在的记录将被 Excel 中的最新数据覆盖更新。
-            </p>
+            <p className="text-amber-600 font-medium">已存在的记录将被 Excel 中的最新数据覆盖更新。</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>取消</Button>
