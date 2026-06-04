@@ -24,6 +24,7 @@ interface Machine {
 }
 
 export default function MachinesPage() {
+  const toast = useToast();
   const [data, setData] = useState<{ machines: Machine[]; total: number }>({ machines: [], total: 0 });
   const [q, setQ] = useState("");
   const [projectId, setProjectId] = useState("");
@@ -33,6 +34,8 @@ export default function MachinesPage() {
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("machineSn");
   const [dir, setDir] = useState<"asc" | "desc">("asc");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Machine | null>(null);
 
   useEffect(() => {
     fetch("/api/projects").then((r) => r.json()).then(setProjects);
@@ -55,10 +58,15 @@ export default function MachinesPage() {
     setLoading(false);
   }, [q, projectId, page, limit, sort, dir]);
 
-  const handleSearch = () => {
-    setPage(1);
+  const handleDelete = async (m: Machine) => {
+    if (!confirm(`确定删除机器"${m.machineSn}"？`)) return;
+    const res = await fetch(`/api/machines/${m.id}`, { method: "DELETE" });
+    if (!res.ok) { const err = await res.json(); toast.error(err.error); return; }
+    toast.success(`已删除"${m.machineSn}"`);
     load();
   };
+
+  const handleSearch = () => { setPage(1); load(); };
 
   useEffect(() => {
     const timer = setTimeout(() => { load(); }, 300);
@@ -87,7 +95,10 @@ export default function MachinesPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <Breadcrumb items={[{ label: "机器管理" }]} />
-      <h1 className="text-2xl font-bold mb-6">机器管理</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">机器管理</h1>
+        <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>新增机器</Button>
+      </div>
 
       <div className="flex gap-3 mb-4">
         <Input
@@ -129,6 +140,7 @@ export default function MachinesPage() {
                   <SortHead field="manufacturer" label="厂商" />
                   <SortHead field="project" label="项目" />
                   <SortHead field="parts" label="部件数" />
+                  <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -142,9 +154,15 @@ export default function MachinesPage() {
                     <TableCell className="text-muted-foreground">{m.modelCode ?? "-"}</TableCell>
                     <TableCell>{m.manufacturer ?? "-"}</TableCell>
                     <TableCell>
-                      <Link href={`/projects/${m.project.name}`} className="text-sm hover:underline">{m.project.name}</Link>
+                      <Link href={`/projects`} className="text-sm hover:underline">{m.project.name}</Link>
                     </TableCell>
                     <TableCell><Badge variant="secondary">{m._count.parts}</Badge></TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => { setEditing(m); setDialogOpen(true); }}>编辑</Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(m)}>删除</Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -177,6 +195,8 @@ export default function MachinesPage() {
           />
         </>
       )}
+
+      <MachineFormDialog open={dialogOpen} onOpenChange={setDialogOpen} machine={editing} onSaved={load} />
     </div>
   );
 }

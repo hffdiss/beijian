@@ -48,3 +48,27 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({ machines, total, page, limit: effectiveLimit });
 }
+
+export async function POST(request: Request) {
+  const data = await request.json();
+  if (!data.machineSn) {
+    return NextResponse.json({ error: "整机SN不能为空" }, { status: 400 });
+  }
+  try {
+    const machine = await prisma.machine.create({
+      data: {
+        machineSn: data.machineSn,
+        manufacturerSn: data.manufacturerSn,
+        product: data.product,
+        modelCode: data.modelCode,
+        manufacturer: data.manufacturer,
+        projectId: data.projectId || null,
+      },
+      include: { project: { select: { name: true } }, _count: { select: { parts: true } } },
+    });
+    return NextResponse.json(machine, { status: 201 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "创建失败";
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
+}
