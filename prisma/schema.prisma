@@ -79,6 +79,7 @@ model Project {
   updatedAt          DateTime  @updatedAt
   machines           Machine[]
   parts              Part[]
+  transactions       Transaction[]
 }
 
 model Machine {
@@ -93,6 +94,7 @@ model Machine {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   parts           Part[]
+  transactions    Transaction[]
 
   @@index([projectId])
 }
@@ -180,11 +182,16 @@ model Transaction {
   relatedPerson String?
   note          String?
   batchId       String?
+  projectId     String?
+  machineId     String?
   createdAt     DateTime        @default(now())
   item          Item            @relation(fields: [itemId], references: [id])
+  project       Project?        @relation(fields: [projectId], references: [id])
+  machine       Machine?        @relation(fields: [machineId], references: [id])
 
   @@index([itemId])
   @@index([createdAt])
+  @@index([projectId])
 }
 
 model StockTake {

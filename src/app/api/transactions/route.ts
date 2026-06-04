@@ -43,7 +43,11 @@ export async function GET(request: NextRequest) {
   const [transactions, total] = await Promise.all([
     prisma.transaction.findMany({
       where,
-      include: { item: { select: { id: true, code: true, name: true, unit: true } } },
+      include: {
+        item: { select: { id: true, code: true, name: true, unit: true } },
+        project: { select: { id: true, name: true } },
+        machine: { select: { id: true, machineSn: true } },
+      },
       orderBy: sortMap[sort] ?? { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
@@ -73,6 +77,8 @@ export async function POST(request: Request) {
 
   const batchId = Date.now().toString(36);
   const type = data.type;
+  const projectId = data.projectId || null;
+  const machineId = data.machineId || null;
 
   try {
     const results = [];
@@ -107,6 +113,8 @@ export async function POST(request: Request) {
               relatedPerson: row.relatedPerson,
               note: row.note,
               batchId,
+              projectId,
+              machineId,
             },
           }),
           tx.item.update({

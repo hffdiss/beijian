@@ -23,6 +23,8 @@ interface Transaction {
   batchId: string | null;
   createdAt: string;
   item: { id: string; code: string; name: string; unit: string };
+  project: { id: string; name: string } | null;
+  machine: { id: string; machineSn: string } | null;
 }
 
 interface BatchGroup {
@@ -162,6 +164,7 @@ export default function TransactionHistoryPage() {
                   <SortHead field="createdAt" label="时间" />
                   <TableHead>类型</TableHead>
                   <TableHead>物料 / 批次</TableHead>
+                  <TableHead>项目</TableHead>
                   <TableHead>数量</TableHead>
                   <TableHead>人员</TableHead>
                   <TableHead>用途</TableHead>
@@ -186,6 +189,7 @@ export default function TransactionHistoryPage() {
                             <span className="font-medium">{batch.items.length} 种物料</span>
                             <span className="text-xs text-muted-foreground ml-1">({isExpanded ? "▲" : "▼"} 展开)</span>
                           </TableCell>
+                          <TableCell className="text-xs">{batch.items[0]?.project?.name ?? "-"}</TableCell>
                           <TableCell><Badge variant="outline">{batch.totalQty}</Badge></TableCell>
                           <TableCell>{batch.items[0].relatedPerson ?? "-"}</TableCell>
                           <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">{batch.items[0].reason ?? "-"}</TableCell>
@@ -217,6 +221,7 @@ export default function TransactionHistoryPage() {
                       <TableCell className="text-sm">{new Date(txn.createdAt).toLocaleString("zh-CN")}</TableCell>
                       <TableCell><Badge variant={txn.type === "IN" ? "default" : "secondary"}>{txn.type === "IN" ? "入库" : "出库"}</Badge></TableCell>
                       <TableCell>{txn.item.name} <span className="text-muted-foreground text-xs">({txn.item.code})</span></TableCell>
+                      <TableCell className="text-xs">{txn.project?.name ?? "-"}</TableCell>
                       <TableCell>{txn.quantity} {txn.item.unit}</TableCell>
                       <TableCell>{txn.relatedPerson ?? "-"}</TableCell>
                       <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">{txn.reason ?? "-"}</TableCell>

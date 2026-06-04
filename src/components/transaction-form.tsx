@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { useToast } from "@/components/toast";
 
@@ -41,6 +42,10 @@ export function TransactionForm({ type }: Props) {
   const [reason, setReason] = useState("");
   const [relatedPerson, setRelatedPerson] = useState("");
   const [note, setNote] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [machineId, setMachineId] = useState("");
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
+  const [machines, setMachines] = useState<{ id: string; machineSn: string }[]>([]);
 
   // Submit
   const [submitting, setSubmitting] = useState(false);
@@ -63,6 +68,12 @@ export function TransactionForm({ type }: Props) {
     }, 250);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Load project/machine lists
+  useEffect(() => {
+    fetch("/api/projects").then((r) => r.json()).then(setProjects);
+    fetch("/api/machines?limit=300").then((r) => r.json()).then((d) => setMachines(Array.isArray(d) ? d : d.machines ?? []));
+  }, []);
 
   const handleGenerateItems = async () => {
     setGenerating(true);
@@ -104,6 +115,8 @@ export function TransactionForm({ type }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type,
+        projectId: projectId || null,
+        machineId: machineId || null,
         items: cart.map((c) => ({ itemId: c.itemId, quantity: c.quantity, reason, relatedPerson, note })),
       }),
     });
@@ -262,6 +275,22 @@ export function TransactionForm({ type }: Props) {
 
                 {/* Info fields */}
                 <div className="border-t px-4 py-3 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select value={projectId || "null"} onValueChange={(v) => setProjectId(!v || v === "null" ? "" : v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="关联项目（可选）" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="null">不关联</SelectItem>
+                        {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Select value={machineId || "null"} onValueChange={(v) => setMachineId(!v || v === "null" ? "" : v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="关联机器（可选）" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="null">不关联</SelectItem>
+                        {machines.slice(0, 100).map((m) => <SelectItem key={m.id} value={m.id}>{m.machineSn}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Input value={reason} onChange={(e) => setReason(e.target.value)}
                       placeholder={isIn ? "入库原因" : "用途"} className="text-sm h-8" />
