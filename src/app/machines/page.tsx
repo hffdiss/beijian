@@ -111,14 +111,14 @@ export default function MachinesPage() {
           className="max-w-sm"
         />
         <Select
-          value={projectId || "null"}
-          onValueChange={(v) => { setProjectId(!v || v === "null" ? "" : v); setPage(1); }}
+          value={projectId || ""}
+          onValueChange={(v) => { setProjectId(!v ? "" : v); setPage(1); }}
         >
           <SelectTrigger className="w-48">
             <SelectValue placeholder="全部项目" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">全部项目</SelectItem>
+            <SelectItem value="">全部项目</SelectItem>
             {projects.map((p) => (
               <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
             ))}

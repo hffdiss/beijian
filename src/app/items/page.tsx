@@ -132,14 +132,14 @@ export default function ItemsPage() {
           className="max-w-sm"
         />
         <Select
-          value={categoryId || "null"}
-          onValueChange={(v) => { setCategoryId(!v || v === "null" ? "" : v); setPage(1); }}
+          value={categoryId || ""}
+          onValueChange={(v) => { setCategoryId(!v ? "" : v); setPage(1); }}
         >
           <SelectTrigger className="w-48">
             <SelectValue placeholder="全部分类" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">全部分类</SelectItem>
+            <SelectItem value="">全部分类</SelectItem>
             {categoriesFlat.map((c) => (
               <SelectItem key={c.id} value={c.id}>{categoryName(c)}</SelectItem>
             ))}

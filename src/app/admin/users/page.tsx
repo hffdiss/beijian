@@ -187,9 +187,9 @@ export default function AdminUsersPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <Button size="sm" onClick={() => { setNewOpen(true); setNewError(""); }}>新增用户</Button>
                   <Input placeholder="搜索..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="w-32 h-8 text-sm" />
-                  <Select value={roleFilter || "null"} onValueChange={(v) => setRoleFilter(!v || v === "null" ? "" : v)}>
+                  <Select value={roleFilter || ""} onValueChange={(v) => setRoleFilter(!v ? "" : v)}>
                     <SelectTrigger className="w-24 h-8 text-sm"><SelectValue placeholder="角色" /></SelectTrigger>
-                    <SelectContent><SelectItem value="null">全部</SelectItem><SelectItem value="admin">管理员</SelectItem><SelectItem value="user">普通用户</SelectItem></SelectContent>
+                    <SelectContent><SelectItem value="">全部</SelectItem><SelectItem value="admin">管理员</SelectItem><SelectItem value="user">普通用户</SelectItem></SelectContent>
                   </Select>
                 </div>
                 <Table>

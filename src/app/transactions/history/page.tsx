@@ -142,9 +142,9 @@ export default function TransactionHistoryPage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-4">
         <Input placeholder="搜索物料名称" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} className="max-w-[180px] text-sm h-8" />
-        <Select value={type || "null"} onValueChange={(v) => { setType(!v || v === "null" ? "" : v); setPage(1); }}>
+        <Select value={type || ""} onValueChange={(v) => { setType(!v ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-28 h-8 text-sm"><SelectValue placeholder="类型" /></SelectTrigger>
-          <SelectContent><SelectItem value="null">全部</SelectItem><SelectItem value="IN">入库</SelectItem><SelectItem value="OUT">出库</SelectItem></SelectContent>
+          <SelectContent><SelectItem value="">全部</SelectItem><SelectItem value="IN">入库</SelectItem><SelectItem value="OUT">出库</SelectItem></SelectContent>
         </Select>
         <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="w-36 h-8 text-sm" title="开始日期" />
         <span className="text-muted-foreground self-center text-sm">—</span>

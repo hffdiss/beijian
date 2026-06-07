@@ -108,14 +108,14 @@ export default function BomsPage() {
           className="max-w-sm"
         />
         <Select
-          value={materialCategory || "null"}
-          onValueChange={(v) => { setMaterialCategory(!v || v === "null" ? "" : v); setPage(1); }}
+          value={materialCategory || ""}
+          onValueChange={(v) => { setMaterialCategory(!v ? "" : v); setPage(1); }}
         >
           <SelectTrigger className="w-44">
             <SelectValue placeholder="物料类别" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">全部类别</SelectItem>
+            <SelectItem value="">全部类别</SelectItem>
             <SelectItem value="0B包装材料">包装材料</SelectItem>
             <SelectItem value="0C存储介质">存储介质</SelectItem>
             <SelectItem value="0E交换机">交换机</SelectItem>

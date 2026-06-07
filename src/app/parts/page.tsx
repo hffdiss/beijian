@@ -204,37 +204,37 @@ export default function PartsPage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4">
         <Input placeholder="多词搜索..." value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} className="max-w-sm" />
-        <Select value={equipmentCategory || "null"} onValueChange={(v) => { setEquipmentCategory(!v || v === "null" ? "" : v); setPage(1); }}>
+        <Select value={equipmentCategory || ""} onValueChange={(v) => { setEquipmentCategory(!v ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="类别" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">全部类别</SelectItem>
+            <SelectItem value="">全部类别</SelectItem>
             {stats?.byCategory.filter((c) => c.equipmentCategory).map((c) => (
               <SelectItem key={c.equipmentCategory!} value={c.equipmentCategory!}>{c.equipmentCategory} ({c._count})</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Select value={spareStatus || "null"} onValueChange={(v) => { setSpareStatus(!v || v === "null" ? "" : v); setPage(1); }}>
+        <Select value={spareStatus || ""} onValueChange={(v) => { setSpareStatus(!v ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="状态" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">全部</SelectItem>
+            <SelectItem value="">全部</SelectItem>
             {stats?.byStatus.filter((s) => s.spareStatus).map((s) => (
               <SelectItem key={s.spareStatus!} value={s.spareStatus!}>{s.spareStatus} ({s._count})</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Select value={spareWarehouse || "null"} onValueChange={(v) => { setSpareWarehouse(!v || v === "null" ? "" : v); setPage(1); }}>
+        <Select value={spareWarehouse || ""} onValueChange={(v) => { setSpareWarehouse(!v ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="库房" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">全部</SelectItem>
+            <SelectItem value="">全部</SelectItem>
             {stats?.byWarehouse.filter((w) => w.spareWarehouse).map((w) => (
               <SelectItem key={w.spareWarehouse!} value={w.spareWarehouse!}>{w.spareWarehouse} ({w._count})</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Select value={isSpare || "null"} onValueChange={(v) => { setIsSpare(!v || v === "null" ? "" : v); setPage(1); }}>
+        <Select value={isSpare || ""} onValueChange={(v) => { setIsSpare(!v ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-32"><SelectValue placeholder="备件" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">全部</SelectItem>
+            <SelectItem value="">全部</SelectItem>
             <SelectItem value="true">是</SelectItem>
             <SelectItem value="false">否</SelectItem>
           </SelectContent>

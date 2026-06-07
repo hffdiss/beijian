@@ -258,14 +258,14 @@ export default function StockTakePage() {
           <div className="flex gap-3 items-end">
             <div className="flex-1">
               <Select
-                value={categoryId || "null"}
-                onValueChange={(v) => setCategoryId(!v || v === "null" ? "" : v)}
+                value={categoryId || ""}
+                onValueChange={(v) => setCategoryId(!v ? "" : v)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="全盘（所有物料）" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="null">全盘（所有物料）</SelectItem>
+                  <SelectItem value="">全盘（所有物料）</SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
