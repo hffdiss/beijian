@@ -1,0 +1,21 @@
+[Unit]
+Description=备品备件管理系统
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/beijian
+ExecStart=/usr/bin/node /opt/beijian/node_modules/.bin/next start
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=3000
+EnvironmentFile=/opt/beijian/.env
+
+# 安全加固
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
