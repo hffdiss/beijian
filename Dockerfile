@@ -1,0 +1,41 @@
+FROM node:22-alpine AS base
+RUN apk add --no-cache python3 make g++
+
+FROM base AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --production=false
+
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npx prisma generate
+RUN npm run build
+
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 app && adduser --system --uid 1001 app
+
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Copy data files if they exist
+COPY --from=builder /app/beijian.xlsx ./beijian.xlsx 2>/dev/null || true
+COPY --from=builder /app/backups ./backups 2>/dev/null || true
+
+RUN mkdir -p prisma backups
+
+USER app
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+CMD ["node", "server.js"]

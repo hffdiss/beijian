@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
   const sort = searchParams.get("sort") ?? "bomCode";
   const dir = (searchParams.get("dir") ?? "asc") === "desc" ? "desc" : "asc";
-  const sortMap: Record<string, Record<string, string>> = {
+  const sortMap: Record<string, unknown> = {
     bomCode: { bomCode: dir },
     name: { name: dir },
     model: { model: dir },

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   const skip = (page - 1) * effectiveLimit;
 
   // Map sort field to Prisma orderBy
-  const sortMap: Record<string, Record<string, string>> = {
+  const sortMap: Record<string, unknown> = {
     machineSn: { machineSn: dir },
     manufacturerSn: { manufacturerSn: dir },
     product: { product: dir },

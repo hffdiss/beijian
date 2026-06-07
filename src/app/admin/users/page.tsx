@@ -198,7 +198,7 @@ export default function AdminUsersPage() {
                     {filteredUsers.map((u) => (
                       <TableRow key={u.id}>
                         <TableCell className="font-medium">{u.username}{u.username === user.username && <Badge variant="outline" className="ml-2 text-xs">我</Badge>}</TableCell>
-                        <TableCell><Select value={u.role} onValueChange={(v) => handleRoleChange(u.id, v)}><SelectTrigger className="w-24 h-7 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="admin">管理员</SelectItem><SelectItem value="user">普通用户</SelectItem></SelectContent></Select></TableCell>
+                        <TableCell><Select value={u.role} onValueChange={(v) => v && handleRoleChange(u.id, v)}><SelectTrigger className="w-24 h-7 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="admin">管理员</SelectItem><SelectItem value="user">普通用户</SelectItem></SelectContent></Select></TableCell>
                         <TableCell><Badge variant={u.passwordChanged ? "secondary" : "destructive"}>{u.passwordChanged ? "已改" : "默认"}</Badge></TableCell>
                         <TableCell className="text-xs text-muted-foreground">{new Date(u.createdAt).toLocaleDateString("zh-CN")}</TableCell>
                         <TableCell>
@@ -231,7 +231,7 @@ export default function AdminUsersPage() {
           <div className="space-y-3">
             <div><label className="text-sm font-medium">用户名</label><Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="用户名" /></div>
             <div><label className="text-sm font-medium">密码</label><Input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="至少4位" /></div>
-            <div><label className="text-sm font-medium">角色</label><Select value={newRole} onValueChange={setNewRole}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="user">普通用户</SelectItem><SelectItem value="admin">管理员</SelectItem></SelectContent></Select></div>
+            <div><label className="text-sm font-medium">角色</label><Select value={newRole} onValueChange={(v) => v && setNewRole(v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="user">普通用户</SelectItem><SelectItem value="admin">管理员</SelectItem></SelectContent></Select></div>
             {newError && <p className="text-sm text-destructive">{newError}</p>}
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setNewOpen(false)}>取消</Button><Button onClick={handleCreateUser} disabled={!newUsername.trim() || newPw.length < 4 || newLoading}>{newLoading ? "创建中..." : "创建"}</Button></DialogFooter>

@@ -97,7 +97,7 @@ export function MachineFormDialog({ open, onOpenChange, machine, onSaved }: Prop
           </div>
           <div>
             <label className="text-sm font-medium">所属项目</label>
-            <Select value={form.projectId || ""} onValueChange={(v) => setForm({ ...form, projectId: v })}>
+            <Select value={form.projectId || ""} onValueChange={(v) => setForm({ ...form, projectId: v ?? "" })}>
               <SelectTrigger><SelectValue placeholder="选择项目" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="">无</SelectItem>

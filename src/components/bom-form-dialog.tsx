@@ -52,7 +52,7 @@ export function BomFormDialog({ open, onOpenChange, bom, onSaved }: Props) {
     if (bom) {
       setForm({
         bomCode: bom.bomCode ?? "",
-        sbomCode: (bom as Record<string, unknown>).sbomCode as string ?? "",
+        sbomCode: (bom as unknown as Record<string, unknown>).sbomCode as string ?? "",
         name: bom.name ?? "",
         model: bom.model ?? "",
         subModel: bom.subModel ?? "",
@@ -75,11 +75,11 @@ export function BomFormDialog({ open, onOpenChange, bom, onSaved }: Props) {
       });
     } else {
       setForm({
-        bomCode: "", name: "", model: "", subModel: "", manufacturer: "",
-        manufacturerModel: "", materialCategory: "", materialSubcategory: "",
-        category: "", unit: "PCS", quantity: 1, nandType: "", firmwareVersion: "",
-        lifecycle: "", supplier: "", detailDescription: "", processCode: "",
-        status: "", isSpare: false, remark: "",
+        bomCode: "", sbomCode: "", name: "", model: "", subModel: "",
+        manufacturer: "", manufacturerModel: "", materialCategory: "",
+        materialSubcategory: "", category: "", unit: "PCS", quantity: 1,
+        nandType: "", firmwareVersion: "", lifecycle: "", supplier: "",
+        detailDescription: "", processCode: "", status: "", isSpare: false, remark: "",
       });
     }
   }, [bom, open]);
@@ -114,7 +114,7 @@ export function BomFormDialog({ open, onOpenChange, bom, onSaved }: Props) {
       <label className="text-sm font-medium">{label}</label>
       <Input
         type={opts?.type ?? "text"}
-        value={String((form as Record<string, unknown>)[key] ?? "")}
+        value={String((form as unknown as Record<string, unknown>)[key] ?? "")}
         onChange={(e) => update(key, opts?.type === "number" ? Number(e.target.value) : e.target.value)}
       />
     </div>

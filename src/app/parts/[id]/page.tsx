@@ -137,7 +137,7 @@ export default function PartDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="text-sm font-medium">所属项目</label>
-                <Select value={String(form.projectId ?? "")} onValueChange={(v) => updateForm("projectId", v)}>
+                <Select value={String(form.projectId ?? "")} onValueChange={(v) => updateForm("projectId", v ?? "")}>
                   <SelectTrigger><SelectValue placeholder="选择项目" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">无</SelectItem>
@@ -147,7 +147,7 @@ export default function PartDetailPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">所属机器</label>
-                <Select value={String(form.machineId ?? "")} onValueChange={(v) => updateForm("machineId", v)}>
+                <Select value={String(form.machineId ?? "")} onValueChange={(v) => updateForm("machineId", v ?? "")}>
                   <SelectTrigger><SelectValue placeholder="选择机器" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">无</SelectItem>
@@ -157,7 +157,7 @@ export default function PartDetailPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">BBOM编码</label>
-                <Select value={String(form.bomCode ?? "")} onValueChange={(v) => updateForm("bomCode", v)}>
+                <Select value={String(form.bomCode ?? "")} onValueChange={(v) => updateForm("bomCode", v ?? "")}>
                   <SelectTrigger><SelectValue placeholder="选择BOM" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">无</SelectItem>
@@ -169,7 +169,7 @@ export default function PartDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
                 <label className="text-sm font-medium">备件状态</label>
-                <Select value={String(form.spareStatus ?? "")} onValueChange={(v) => updateForm("spareStatus", v)}>
+                <Select value={String(form.spareStatus ?? "")} onValueChange={(v) => updateForm("spareStatus", v ?? "")}>
                   <SelectTrigger><SelectValue placeholder="状态" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">全部</SelectItem>
@@ -182,7 +182,7 @@ export default function PartDetailPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">备件库房</label>
-                <Select value={String(form.spareWarehouse ?? "")} onValueChange={(v) => updateForm("spareWarehouse", v)}>
+                <Select value={String(form.spareWarehouse ?? "")} onValueChange={(v) => updateForm("spareWarehouse", v ?? "")}>
                   <SelectTrigger><SelectValue placeholder="库房" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">无</SelectItem>

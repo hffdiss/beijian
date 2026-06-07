@@ -16,6 +16,7 @@ import { ItemFormDialog } from "@/components/item-form-dialog";
 import { Pagination } from "@/components/pagination";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { TableSkeleton } from "@/components/skeleton";
+import { useToast } from "@/components/toast";
 
 interface Category {
   id: string;
@@ -48,6 +49,7 @@ interface Item {
 }
 
 export default function ItemsPage() {
+  const toast = useToast();
   const [data, setData] = useState<{ items: Item[]; total: number }>({ items: [], total: 0 });
   const [categories, setCategories] = useState<Category[]>([]);
   const [q, setQ] = useState("");

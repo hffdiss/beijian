@@ -12,6 +12,7 @@ import { BomFormDialog } from "@/components/bom-form-dialog";
 import { Pagination } from "@/components/pagination";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { TableSkeleton } from "@/components/skeleton";
+import { useToast } from "@/components/toast";
 
 interface BomItem {
   id: string;
@@ -28,6 +29,7 @@ interface BomItem {
 }
 
 export default function BomsPage() {
+  const toast = useToast();
   const [data, setData] = useState<{ boms: BomItem[]; total: number }>({ boms: [], total: 0 });
   const [q, setQ] = useState("");
   const [materialCategory, setMaterialCategory] = useState("");

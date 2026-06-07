@@ -82,7 +82,7 @@ export function PartFormDialog({ open, onOpenChange, onSaved }: Props) {
             </div>
             <div>
               <label className="text-sm font-medium">备件状态</label>
-              <Select value={form.spareStatus || ""} onValueChange={(v) => setForm({ ...form, spareStatus: v })}>
+              <Select value={form.spareStatus || ""} onValueChange={(v) => setForm({ ...form, spareStatus: v ?? "" })}>
                 <SelectTrigger><SelectValue placeholder="选择" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">无</SelectItem>
@@ -97,7 +97,7 @@ export function PartFormDialog({ open, onOpenChange, onSaved }: Props) {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="text-sm font-medium">项目</label>
-              <Select value={form.projectId} onValueChange={(v) => setForm({ ...form, projectId: v })}>
+              <Select value={form.projectId} onValueChange={(v) => setForm({ ...form, projectId: v ?? "" })}>
                 <SelectTrigger><SelectValue placeholder="选择" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">无</SelectItem>
@@ -107,7 +107,7 @@ export function PartFormDialog({ open, onOpenChange, onSaved }: Props) {
             </div>
             <div>
               <label className="text-sm font-medium">机器</label>
-              <Select value={form.machineId} onValueChange={(v) => setForm({ ...form, machineId: v })}>
+              <Select value={form.machineId} onValueChange={(v) => setForm({ ...form, machineId: v ?? "" })}>
                 <SelectTrigger><SelectValue placeholder="选择" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">无</SelectItem>
@@ -117,7 +117,7 @@ export function PartFormDialog({ open, onOpenChange, onSaved }: Props) {
             </div>
             <div>
               <label className="text-sm font-medium">BOM</label>
-              <Select value={form.bomCode} onValueChange={(v) => setForm({ ...form, bomCode: v })}>
+              <Select value={form.bomCode} onValueChange={(v) => setForm({ ...form, bomCode: v ?? "" })}>
                 <SelectTrigger><SelectValue placeholder="选择" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">无</SelectItem>

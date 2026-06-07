@@ -12,6 +12,7 @@ import { PartFormDialog } from "@/components/part-form-dialog";
 import { TableSkeleton } from "@/components/skeleton";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Pagination } from "@/components/pagination";
+import { useToast } from "@/components/toast";
 
 interface PartItem {
   id: string;
@@ -48,6 +49,7 @@ const COLUMNS = [
 const SAVED_VIEWS_KEY = "beijian_parts_views";
 
 export default function PartsPage() {
+  const toast = useToast();
   const [data, setData] = useState<{ parts: PartItem[]; total: number }>({ parts: [], total: 0 });
   const [stats, setStats] = useState<Stats | null>(null);
   const [q, setQ] = useState("");

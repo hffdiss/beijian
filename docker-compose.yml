@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  beijian:
+    build: .
+    container_name: beijian
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:./prisma/dev.db
+      - JWT_SECRET=change-this-to-a-random-secret
+    volumes:
+      # Persistent database and backups
+      - ./data/prisma:/app/prisma
+      - ./data/backups:/app/backups
+      # Import file (optional)
+      - ./beijian.xlsx:/app/beijian.xlsx:ro

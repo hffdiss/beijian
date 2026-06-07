@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
   const sort = searchParams.get("sort") ?? "updatedAt";
   const dir = (searchParams.get("dir") ?? "desc") === "desc" ? "desc" : "asc";
-  const sortMap: Record<string, Record<string, string>> = {
+  const sortMap: Record<string, unknown> = {
     code: { code: dir },
     name: { name: dir },
     model: { model: dir },

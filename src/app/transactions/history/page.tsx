@@ -104,9 +104,8 @@ export default function TransactionHistoryPage() {
     });
     const result: (BatchGroup | Transaction)[] = [...groups, ...singles];
     result.sort((a, b) => {
-      const da = "batchId" in a ? new Date(a.createdAt).getTime() : new Date(a.createdAt).getTime();
-      const db = "batchId" in b ? new Date(b.createdAt).getTime() : new Date(b.createdAt).getTime();
-      return sort === "createdAt" ? (dir === "desc" ? db - da : da - db) : 0;
+      const getTime = (x: BatchGroup | Transaction) => new Date(x.createdAt).getTime();
+      return sort === "createdAt" ? (dir === "desc" ? getTime(b) - getTime(a) : getTime(a) - getTime(b)) : 0;
     });
     return result;
   };

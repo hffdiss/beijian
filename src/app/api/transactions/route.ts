@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const sortMap: Record<string, Record<string, string>> = {
+  const sortMap: Record<string, unknown> = {
     createdAt: { createdAt: dir },
   };
 
