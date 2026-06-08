@@ -1,10 +1,8 @@
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { hash } from "bcryptjs";
 
 async function seed() {
-  const adapter = new PrismaBetterSqlite3({ url: "file:./prisma/dev.db" });
-  const prisma = new PrismaClient({ adapter });
+  const prisma = new PrismaClient();
 
   const passwordHash = await hash("admin123", 12);
   const existing = await prisma.user.findUnique({ where: { username: "admin" } });

@@ -1,16 +1,22 @@
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 function createPrismaClient(): PrismaClient {
-  const adapter = new PrismaBetterSqlite3({
-    url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
-  });
+  const url = process.env.DATABASE_URL ?? "";
+  const isSQLite = url.startsWith("file:");
 
-  return new PrismaClient({ adapter });
+  if (isSQLite) {
+    // SQLite requires an adapter in Prisma 7
+    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
+    const adapter = new PrismaBetterSqlite3({ url });
+    return new PrismaClient({ adapter });
+  }
+
+  // MySQL/PostgreSQL use built-in driver
+  return new PrismaClient();
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
