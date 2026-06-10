@@ -95,13 +95,6 @@ export default function PartsPage() {
     setLoading(false);
   }, [q, spareStatus, spareWarehouse, isSpare, equipmentCategory, page, limit]);
 
-  const autoFitAll = useCallback(() => {
-    setIsTableFixed(true);
-    ["partSn", "description", "model", "project", "machine", "isSpare", "spareStatus", "spareWarehouse"]
-      .forEach((f) => onAutoFit(f));
-  }, []);
-  useEffect(() => { if (!loading && data.parts.length > 0) autoFitAll(); }, [loading, data.parts.length]);
-
   useEffect(() => { loadStats(); }, [loadStats]);
   useEffect(() => {
     const timer = setTimeout(() => { load(); }, 200);

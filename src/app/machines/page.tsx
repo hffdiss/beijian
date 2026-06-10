@@ -75,13 +75,6 @@ export default function MachinesPage() {
 
   const handleSearch = () => { setPage(1); load(); };
 
-  const autoFitAll = useCallback(() => {
-    setIsTableFixed(true);
-    ["machineSn", "manufacturerSn", "product", "modelCode", "manufacturer", "project", "parts"]
-      .forEach((f) => onAutoFit(f));
-  }, []);
-  useEffect(() => { if (!loading && data.machines.length > 0) autoFitAll(); }, [loading, data.machines.length]);
-
   useEffect(() => {
     const timer = setTimeout(() => { load(); }, 300);
     return () => clearTimeout(timer);

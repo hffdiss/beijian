@@ -155,21 +155,13 @@ export default function ProjectsPage() {
     setColTick((t) => t + 1);
   };
 
-  const autoFitAll = useCallback(() => {
-    setIsTableFixed(true);
-    const fields: SortField[] = ["name", "city", "contractNumber", "oem", "machines", "parts", "warrantyEnd"];
-    fields.forEach((f) => onAutoFit(f));
-  }, []);
-
-  useEffect(() => { if (!loading && projects.length > 0) autoFitAll(); }, [loading, projects.length]);
-
   type Tick = number;
   const [, setColTick] = useState<Tick>(0);
 
-  const SortHead = ({ field, label }: { field: SortField; label: string }) => {
+  const SortHead = ({ field, label, className }: { field: SortField; label: string; className?: string }) => {
     const width = colWidthsRef.current[field];
     return (
-      <TableHead data-field={field} className="cursor-pointer hover:bg-muted/50 select-none relative" onClick={() => toggleSort(field)} style={width ? { width, minWidth: 40 } : undefined}>
+      <TableHead data-field={field} className={`cursor-pointer hover:bg-muted/50 select-none relative ${className ?? ""}`} onClick={() => toggleSort(field)} style={width ? { width, minWidth: 40 } : undefined}>
         <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
         <div
           className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 z-10"
@@ -211,10 +203,10 @@ export default function ProjectsPage() {
             <Table className={isTableFixed ? "table-fixed" : ""}>
               <TableHeader>
                 <TableRow>
-                  <SortHead field="name" label="项目名称" />
-                  <SortHead field="city" label="城市" />
-                  <SortHead field="contractNumber" label="合同号" />
-                  <SortHead field="oem" label="OEM" />
+                  <SortHead field="name" label="项目名称" className="max-w-[240px]" />
+                  <SortHead field="city" label="城市" className="max-w-[120px]" />
+                  <SortHead field="contractNumber" label="合同号" className="max-w-[180px]" />
+                  <SortHead field="oem" label="OEM" className="max-w-[160px]" />
                   <SortHead field="machines" label="机器数" />
                   <SortHead field="parts" label="部件数" />
                   <SortHead field="warrantyEnd" label="维保截止" />
@@ -224,14 +216,14 @@ export default function ProjectsPage() {
               <TableBody>
                 {displayProjects.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell>
+                    <TableCell className="max-w-[240px]">
                       <div className="truncate" title={p.name}>
                         <Link href={`/projects/${p.id}`} className="hover:underline font-medium">{p.name}</Link>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground"><div className="truncate" title={p.city ?? ""}>{p.city ?? "-"}</div></TableCell>
-                    <TableCell className="text-muted-foreground text-sm"><div className="truncate" title={p.contractNumber ?? ""}>{p.contractNumber ?? "-"}</div></TableCell>
-                    <TableCell><div className="truncate" title={p.oem ?? ""}>{p.oem ?? "-"}</div></TableCell>
+                    <TableCell className="text-muted-foreground max-w-[120px]"><div className="truncate" title={p.city ?? ""}>{p.city ?? "-"}</div></TableCell>
+                    <TableCell className="text-muted-foreground text-sm max-w-[180px]"><div className="truncate" title={p.contractNumber ?? ""}>{p.contractNumber ?? "-"}</div></TableCell>
+                    <TableCell className="max-w-[160px]"><div className="truncate" title={p.oem ?? ""}>{p.oem ?? "-"}</div></TableCell>
                     <TableCell><Badge variant="secondary">{p._count.machines}</Badge></TableCell>
                     <TableCell><Badge variant="secondary">{p._count.parts}</Badge></TableCell>
                     <TableCell className={`text-sm ${warrantyColor(p.warrantyEnd)}`}>
