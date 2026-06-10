@@ -1,15 +1,5 @@
 {
-  "model": "haiku",
-  "enabledPlugins": {
-    "superpowers@superpowers-dev": true
-  },
   "extraKnownMarketplaces": {
-    "superpowers-dev": {
-      "source": {
-        "source": "directory",
-        "path": "@@CLAUDE_DIR@@/plugins/superpowers"
-      }
-    },
     "karpathy-skills": {
       "source": {
         "source": "github",
@@ -20,6 +10,12 @@
       "source": {
         "source": "github",
         "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "superpowers-dev": {
+      "source": {
+        "source": "directory",
+        "path": "@@CLAUDE_DIR@@/plugins/superpowers"
       }
     }
   },
@@ -45,5 +41,9 @@
         ]
       }
     ]
+  },
+  "model": "haiku",
+  "enabledPlugins": {
+    "superpowers@superpowers-dev": true
   }
 }
