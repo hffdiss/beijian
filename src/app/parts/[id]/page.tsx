@@ -47,26 +47,29 @@ export default function PartDetailPage() {
   const [projects, setProjects] = useState<SelectOption[]>([]);
   const [machines, setMachines] = useState<MachineOption[]>([]);
   const [boms, setBoms] = useState<BomOption[]>([]);
+  const [refLoaded, setRefLoaded] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/parts/${id}`).then((r) => r.json()).then((data) => {
-      setPart(data);
-      setForm({
-        projectId: data.project?.id ?? "",
-        machineId: data.machine?.id ?? "",
-        bomCode: data.bom?.bomCode ?? "",
-        spareStatus: data.spareStatus ?? "",
-        spareWarehouse: data.spareWarehouse ?? "",
-        spareQuantity: data.spareQuantity,
-        spareStrategy: data.spareStrategy ?? "",
-        spareResponsible: data.spareResponsible ?? "",
-        remark: data.remark ?? "",
-      });
-    });
-    // Load reference data for selectors
-    fetch("/api/projects").then((r) => r.json()).then(setProjects);
-    fetch("/api/machines?limit=300").then((r) => r.json()).then((d) => setMachines(Array.isArray(d) ? d : d.machines ?? []));
-    fetch("/api/boms?limit=200").then((r) => r.json()).then((d) => setBoms(d.boms ?? []));
+    setRefLoaded(false);
+    Promise.all([
+      fetch(`/api/parts/${id}`).then((r) => r.json()).then((data) => {
+        setPart(data);
+        setForm({
+          projectId: data.project?.id ?? "",
+          machineId: data.machine?.id ?? "",
+          bomCode: data.bom?.bomCode ?? "",
+          spareStatus: data.spareStatus ?? "",
+          spareWarehouse: data.spareWarehouse ?? "",
+          spareQuantity: data.spareQuantity,
+          spareStrategy: data.spareStrategy ?? "",
+          spareResponsible: data.spareResponsible ?? "",
+          remark: data.remark ?? "",
+        });
+      }),
+      fetch("/api/projects").then((r) => r.json()).then(setProjects),
+      fetch("/api/machines?limit=300").then((r) => r.json()).then((d) => setMachines(Array.isArray(d) ? d : d.machines ?? [])),
+      fetch("/api/boms?limit=200").then((r) => r.json()).then((d) => setBoms(d.boms ?? [])),
+    ]).then(() => setRefLoaded(true));
   }, [id]);
 
   const updateForm = (key: string, value: string | number | boolean) => {
@@ -83,7 +86,7 @@ export default function PartDetailPage() {
       });
       if (!res.ok) { const err = await res.json(); toast.error(err.error); return; }
       const updated = await res.json();
-      setPart((prev) => prev ? { ...prev, ...updated, project: updated.project ?? prev.project, machine: updated.machine ?? prev.machine, bom: updated.bom ?? prev.bom } : prev);
+      setPart((prev) => prev ? { ...prev, ...updated } : prev);
       setEditing(false);
       toast.success("保存成功");
     } catch { toast.error("保存失败"); }
@@ -130,7 +133,7 @@ export default function PartDetailPage() {
       </div>
 
       {/* 关联编辑区 */}
-      {editing && (
+      {editing && refLoaded ? (
         <Card className="mb-6 border-primary/50">
           <CardHeader><CardTitle className="text-base">编辑关联与备件信息</CardTitle></CardHeader>
           <CardContent>
@@ -138,7 +141,7 @@ export default function PartDetailPage() {
               <div>
                 <label className="text-sm font-medium">所属项目</label>
                 <Select value={String(form.projectId ?? "")} onValueChange={(v) => updateForm("projectId", v ?? "")}>
-                  <SelectTrigger><SelectValue placeholder="选择项目" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="选择项目">{(v: string) => v ? projects.find(p => p.id === v)?.name ?? v : null}</SelectValue></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">无</SelectItem>
                     {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
@@ -148,7 +151,7 @@ export default function PartDetailPage() {
               <div>
                 <label className="text-sm font-medium">所属机器</label>
                 <Select value={String(form.machineId ?? "")} onValueChange={(v) => updateForm("machineId", v ?? "")}>
-                  <SelectTrigger><SelectValue placeholder="选择机器" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="选择机器">{(v: string) => v ? machines.find(m => m.id === v)?.machineSn ?? v : null}</SelectValue></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">无</SelectItem>
                     {machines.map((m) => <SelectItem key={m.id} value={m.id}>{m.machineSn}{m.product ? ` (${m.product})` : ""}</SelectItem>)}
@@ -158,7 +161,7 @@ export default function PartDetailPage() {
               <div>
                 <label className="text-sm font-medium">BBOM编码</label>
                 <Select value={String(form.bomCode ?? "")} onValueChange={(v) => updateForm("bomCode", v ?? "")}>
-                  <SelectTrigger><SelectValue placeholder="选择BOM" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="选择BOM">{(v: string) => v ? boms.find(b => b.bomCode === v)?.bomCode ?? v : null}</SelectValue></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">无</SelectItem>
                     {boms.map((b) => <SelectItem key={b.id} value={b.bomCode}>{b.bomCode}{b.name ? ` - ${b.name}` : ""}</SelectItem>)}
@@ -211,7 +214,7 @@ export default function PartDetailPage() {
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : editing ? <div className="mb-6 p-4 text-center text-muted-foreground text-sm">加载中...</div> : null}
 
       {/* 关联信息卡片 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

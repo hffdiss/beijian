@@ -98,7 +98,7 @@ export function PartFormDialog({ open, onOpenChange, onSaved }: Props) {
             <div>
               <label className="text-sm font-medium">项目</label>
               <Select value={form.projectId} onValueChange={(v) => setForm({ ...form, projectId: v ?? "" })}>
-                <SelectTrigger><SelectValue placeholder="选择" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="选择">{(v: string) => v ? projects.find(p => p.id === v)?.name ?? v : null}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">无</SelectItem>
                   {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
@@ -108,7 +108,7 @@ export function PartFormDialog({ open, onOpenChange, onSaved }: Props) {
             <div>
               <label className="text-sm font-medium">机器</label>
               <Select value={form.machineId} onValueChange={(v) => setForm({ ...form, machineId: v ?? "" })}>
-                <SelectTrigger><SelectValue placeholder="选择" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="选择">{(v: string) => v ? machines.find(m => m.id === v)?.machineSn ?? v : null}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">无</SelectItem>
                   {machines.map((m) => <SelectItem key={m.id} value={m.id}>{m.machineSn}</SelectItem>)}
@@ -118,7 +118,7 @@ export function PartFormDialog({ open, onOpenChange, onSaved }: Props) {
             <div>
               <label className="text-sm font-medium">BOM</label>
               <Select value={form.bomCode} onValueChange={(v) => setForm({ ...form, bomCode: v ?? "" })}>
-                <SelectTrigger><SelectValue placeholder="选择" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="选择">{(v: string) => v ? boms.find(b => b.bomCode === v)?.bomCode ?? v : null}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">无</SelectItem>
                   {boms.map((b) => <SelectItem key={b.id} value={b.bomCode}>{b.bomCode}</SelectItem>)}

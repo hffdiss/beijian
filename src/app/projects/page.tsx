@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ProjectFormDialog } from "@/components/project-form-dialog";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { TableSkeleton } from "@/components/skeleton";
+import { Pagination } from "@/components/pagination";
 import { useToast } from "@/components/toast";
 
 interface Project {
@@ -33,6 +34,9 @@ export default function ProjectsPage() {
   const [sort, setSort] = useState<SortField>("name");
   const [dir, setDir] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(true);
+  const [isTableFixed, setIsTableFixed] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
   const toggleSort = (field: SortField) => {
     if (sort === field) setDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -94,11 +98,80 @@ export default function ProjectsPage() {
     return "";
   };
 
-  const SortHead = ({ field, label }: { field: SortField; label: string }) => (
-    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => toggleSort(field)}>
-      <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
-    </TableHead>
-  );
+  const displayProjects = projects.slice((page - 1) * limit, page * limit);
+  const totalPages = Math.ceil(projects.length / limit);
+  useEffect(() => { setPage(1); }, [q, sort, dir]);
+
+  const colWidthsRef = useRef<Record<string, number>>({});
+  const dragRef = useRef<{ field: string; startX: number; startWidth: number } | null>(null);
+
+  const onDragStart = (field: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    const th = (e.currentTarget as HTMLElement).closest("th") as HTMLElement;
+    const startWidth = th.offsetWidth;
+    dragRef.current = { field, startX: e.clientX, startWidth };
+    setIsTableFixed(true);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const diff = ev.clientX - dragRef.current.startX;
+      const newWidth = Math.max(40, dragRef.current.startWidth + diff);
+      colWidthsRef.current[dragRef.current.field] = newWidth;
+      setColTick((t) => t + 1);
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
+  const onAutoFit = (field: string) => {
+    const table = document.querySelector('[data-slot="table"]');
+    if (!table) return;
+    const headerTh = table.querySelector(`th[data-field="${field}"]`) as HTMLElement | null;
+    if (!headerTh) return;
+    const allTh = Array.from(table.querySelectorAll("thead tr th"));
+    const idx = allTh.indexOf(headerTh);
+    if (idx === -1) return;
+    let maxW = 0;
+    // Clone each cell off-screen to measure true content width regardless of current column constraint
+    for (const cell of [headerTh, ...table.querySelectorAll("tbody tr")]) {
+      const el = idx === 0 ? (cell as HTMLElement) : ((cell as HTMLElement).querySelectorAll("td")[idx] as HTMLElement | undefined);
+      if (!el) continue;
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.style.cssText = "position:fixed;top:-9999px;left:-9999px;visibility:hidden;width:auto;height:auto;white-space:nowrap";
+      document.body.appendChild(clone);
+      maxW = Math.max(maxW, clone.scrollWidth);
+      document.body.removeChild(clone);
+    }
+    colWidthsRef.current[field] = Math.ceil(maxW) + 4;
+    setColTick((t) => t + 1);
+  };
+
+  type Tick = number;
+  const [, setColTick] = useState<Tick>(0);
+
+  const SortHead = ({ field, label, className }: { field: SortField; label: string; className?: string }) => {
+    const width = colWidthsRef.current[field];
+    return (
+      <TableHead data-field={field} className={`cursor-pointer hover:bg-muted/50 select-none relative ${className ?? ""}`} onClick={() => toggleSort(field)} style={width ? { width, minWidth: 40 } : undefined}>
+        <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
+        <div
+          className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 z-10"
+          onMouseDown={(e) => { e.stopPropagation(); onDragStart(field, e); }}
+          onClick={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => { e.stopPropagation(); onAutoFit(field); }}
+        />
+      </TableHead>
+    );
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -123,32 +196,34 @@ export default function ProjectsPage() {
       </div>
 
       {loading ? (
-        <TableSkeleton rows={8} cols={8} />
+        <TableSkeleton rows={limit > 10 ? 10 : limit} cols={8} />
       ) : (
         <>
           <div className="hidden md:block">
-            <Table>
+            <Table className={isTableFixed ? "table-fixed" : ""}>
               <TableHeader>
                 <TableRow>
-                  <SortHead field="name" label="项目名称" />
-                  <SortHead field="city" label="城市" />
-                  <SortHead field="contractNumber" label="合同号" />
-                  <SortHead field="oem" label="OEM" />
+                  <SortHead field="name" label="项目名称" className="max-w-[240px]" />
+                  <SortHead field="city" label="城市" className="max-w-[120px]" />
+                  <SortHead field="contractNumber" label="合同号" className="max-w-[180px]" />
+                  <SortHead field="oem" label="OEM" className="max-w-[160px]" />
                   <SortHead field="machines" label="机器数" />
                   <SortHead field="parts" label="部件数" />
                   <SortHead field="warrantyEnd" label="维保截止" />
-                  <TableHead>操作</TableHead>
+                  <TableHead className="relative">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {projects.map((p) => (
+                {displayProjects.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell>
-                      <Link href={`/projects/${p.id}`} className="hover:underline font-medium">{p.name}</Link>
+                    <TableCell className="max-w-[240px]">
+                      <div className="truncate" title={p.name}>
+                        <Link href={`/projects/${p.id}`} className="hover:underline font-medium">{p.name}</Link>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{p.city ?? "-"}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{p.contractNumber ?? "-"}</TableCell>
-                    <TableCell>{p.oem ?? "-"}</TableCell>
+                    <TableCell className="text-muted-foreground max-w-[120px]"><div className="truncate" title={p.city ?? ""}>{p.city ?? "-"}</div></TableCell>
+                    <TableCell className="text-muted-foreground text-sm max-w-[180px]"><div className="truncate" title={p.contractNumber ?? ""}>{p.contractNumber ?? "-"}</div></TableCell>
+                    <TableCell className="max-w-[160px]"><div className="truncate" title={p.oem ?? ""}>{p.oem ?? "-"}</div></TableCell>
                     <TableCell><Badge variant="secondary">{p._count.machines}</Badge></TableCell>
                     <TableCell><Badge variant="secondary">{p._count.parts}</Badge></TableCell>
                     <TableCell className={`text-sm ${warrantyColor(p.warrantyEnd)}`}>
@@ -167,7 +242,7 @@ export default function ProjectsPage() {
           </div>
 
           <div className="md:hidden space-y-3">
-            {projects.map((p) => (
+            {displayProjects.map((p) => (
               <Card key={p.id}>
                 <CardContent className="p-4">
                   <Link href={`/projects/${p.id}`} className="font-semibold hover:underline">{p.name}</Link>
@@ -182,6 +257,9 @@ export default function ProjectsPage() {
           </div>
 
           {projects.length === 0 && <p className="text-center text-muted-foreground py-12">暂无项目</p>}
+
+          <Pagination page={page} totalPages={totalPages} total={projects.length} limit={limit}
+            onPageChange={setPage} onLimitChange={(l) => { setLimit(l); setPage(1); }} />
         </>
       )}
 

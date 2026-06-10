@@ -59,7 +59,7 @@ export async function PUT(
         slaGap: data.slaGap,
         remark: data.remark,
       },
-      include: { project: { select: { name: true } }, machine: { select: { machineSn: true } }, bom: { select: { bomCode: true } } },
+      include: { project: { select: { id: true, name: true, city: true, contractNumber: true } }, machine: { select: { id: true, machineSn: true, product: true } }, bom: true },
     });
     return NextResponse.json(part);
   } catch (e) {
