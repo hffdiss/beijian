@@ -349,14 +349,14 @@ export default function PartsPage() {
               <TableBody>
                 {data.parts.map((p) => (
                   <TableRow key={p.id}>
-                    {visibleCols.has("partSn") && <TableCell className="font-mono text-sm"><div className="truncate"><Link href={`/parts/${p.id}`} className="hover:underline">{p.partSn}</Link></div></TableCell>}
-                    {visibleCols.has("description") && <TableCell className="text-muted-foreground max-w-[300px]"><div className="truncate">{p.description ?? "-"}</div></TableCell>}
-                    {visibleCols.has("model") && <TableCell className="text-muted-foreground"><div className="truncate">{p.model ?? "-"}</div></TableCell>}
-                    {visibleCols.has("project") && <TableCell className="text-sm max-w-[200px]"><div className="truncate">{p.project?.name ?? "-"}</div></TableCell>}
-                    {visibleCols.has("machine") && <TableCell className="font-mono text-xs text-muted-foreground"><div className="truncate">{p.machine?.machineSn ?? "-"}</div></TableCell>}
+                    {visibleCols.has("partSn") && <TableCell className="font-mono text-sm"><div className="truncate" title={p.partSn}><Link href={`/parts/${p.id}`} className="hover:underline">{p.partSn}</Link></div></TableCell>}
+                    {visibleCols.has("description") && <TableCell className="text-muted-foreground max-w-[300px]"><div className="truncate" title={p.description ?? ""}>{p.description ?? "-"}</div></TableCell>}
+                    {visibleCols.has("model") && <TableCell className="text-muted-foreground"><div className="truncate" title={p.model ?? ""}>{p.model ?? "-"}</div></TableCell>}
+                    {visibleCols.has("project") && <TableCell className="text-sm max-w-[200px]"><div className="truncate" title={p.project?.name ?? ""}>{p.project?.name ?? "-"}</div></TableCell>}
+                    {visibleCols.has("machine") && <TableCell className="font-mono text-xs text-muted-foreground"><div className="truncate" title={p.machine?.machineSn ?? ""}>{p.machine?.machineSn ?? "-"}</div></TableCell>}
                     {visibleCols.has("isSpare") && <TableCell><div className="truncate">{p.isSpare ? <Badge>是</Badge> : <Badge variant="outline">否</Badge>}</div></TableCell>}
                     {visibleCols.has("spareStatus") && <TableCell><Badge variant={p.spareStatus === "NG" ? "destructive" : "secondary"}>{p.spareStatus ?? "-"}</Badge></TableCell>}
-                    {visibleCols.has("spareWarehouse") && <TableCell className="text-muted-foreground text-sm"><div className="truncate">{p.spareWarehouse ?? "-"}</div></TableCell>}
+                    {visibleCols.has("spareWarehouse") && <TableCell className="text-muted-foreground text-sm"><div className="truncate" title={p.spareWarehouse ?? ""}>{p.spareWarehouse ?? "-"}</div></TableCell>}
                     <TableCell>
                       <div className="flex gap-1">
                         <Link href={`/parts/${p.id}`}><Button variant="ghost" size="sm">编辑</Button></Link>
