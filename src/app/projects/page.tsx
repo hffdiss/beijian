@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,11 +94,51 @@ export default function ProjectsPage() {
     return "";
   };
 
-  const SortHead = ({ field, label }: { field: SortField; label: string }) => (
-    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => toggleSort(field)}>
-      <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
-    </TableHead>
-  );
+  const colWidthsRef = useRef<Record<string, number>>({});
+  const dragRef = useRef<{ field: string; startX: number; startWidth: number } | null>(null);
+
+  const onDragStart = (field: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    const th = (e.currentTarget as HTMLElement).closest("th") as HTMLElement;
+    const startWidth = th.offsetWidth;
+    dragRef.current = { field, startX: e.clientX, startWidth };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const diff = ev.clientX - dragRef.current.startX;
+      const newWidth = Math.max(60, dragRef.current.startWidth + diff);
+      colWidthsRef.current[dragRef.current.field] = newWidth;
+      // Force re-render
+      setColTick((t) => t + 1);
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
+  type Tick = number;
+  const [, setColTick] = useState<Tick>(0);
+
+  const SortHead = ({ field, label }: { field: SortField; label: string }) => {
+    const width = colWidthsRef.current[field];
+    return (
+      <TableHead className="cursor-pointer hover:bg-muted/50 select-none relative" onClick={() => toggleSort(field)} style={width ? { width, minWidth: 60 } : undefined}>
+        <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
+        <div
+          className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 z-10"
+          onMouseDown={(e) => onDragStart(field, e)}
+        />
+      </TableHead>
+    );
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -128,16 +168,6 @@ export default function ProjectsPage() {
         <>
           <div className="hidden md:block">
             <Table>
-              <colgroup>
-                <col className="w-[30%]" />
-                <col className="w-[12%]" />
-                <col className="w-[16%]" />
-                <col className="w-[10%]" />
-                <col className="w-[8%]" />
-                <col className="w-[8%]" />
-                <col className="w-[10%]" />
-                <col className="w-[6%]" />
-              </colgroup>
               <TableHeader>
                 <TableRow>
                   <SortHead field="name" label="项目名称" />
@@ -147,7 +177,7 @@ export default function ProjectsPage() {
                   <SortHead field="machines" label="机器数" />
                   <SortHead field="parts" label="部件数" />
                   <SortHead field="warrantyEnd" label="维保截止" />
-                  <TableHead>操作</TableHead>
+                  <TableHead className="relative">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
