@@ -155,6 +155,14 @@ export default function ProjectsPage() {
     setColTick((t) => t + 1);
   };
 
+  const autoFitAll = useCallback(() => {
+    setIsTableFixed(true);
+    const fields: SortField[] = ["name", "city", "contractNumber", "oem", "machines", "parts", "warrantyEnd"];
+    fields.forEach((f) => onAutoFit(f));
+  }, []);
+
+  useEffect(() => { if (!loading && projects.length > 0) autoFitAll(); }, [loading, projects.length]);
+
   type Tick = number;
   const [, setColTick] = useState<Tick>(0);
 
