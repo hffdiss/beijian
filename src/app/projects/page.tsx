@@ -205,11 +205,13 @@ export default function ProjectsPage() {
                 {projects.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell>
-                      <Link href={`/projects/${p.id}`} className="hover:underline font-medium">{p.name}</Link>
+                      <div className="truncate">
+                        <Link href={`/projects/${p.id}`} className="hover:underline font-medium">{p.name}</Link>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{p.city ?? "-"}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{p.contractNumber ?? "-"}</TableCell>
-                    <TableCell>{p.oem ?? "-"}</TableCell>
+                    <TableCell className="text-muted-foreground"><div className="truncate">{p.city ?? "-"}</div></TableCell>
+                    <TableCell className="text-muted-foreground text-sm"><div className="truncate">{p.contractNumber ?? "-"}</div></TableCell>
+                    <TableCell><div className="truncate">{p.oem ?? "-"}</div></TableCell>
                     <TableCell><Badge variant="secondary">{p._count.machines}</Badge></TableCell>
                     <TableCell><Badge variant="secondary">{p._count.parts}</Badge></TableCell>
                     <TableCell className={`text-sm ${warrantyColor(p.warrantyEnd)}`}>
