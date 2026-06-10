@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,11 @@ export default function MachinesPage() {
   const [dir, setDir] = useState<"asc" | "desc">("asc");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Machine | null>(null);
+  const [isTableFixed, setIsTableFixed] = useState(false);
+  const colWidthsRef = useRef<Record<string, number>>({});
+  const dragRef = useRef<{ field: string; startX: number; startWidth: number } | null>(null);
+  type Tick = number;
+  const [, setColTick] = useState<Tick>(0);
 
   useEffect(() => {
     fetch("/api/projects").then((r) => r.json()).then(setProjects);
@@ -77,14 +82,69 @@ export default function MachinesPage() {
 
   const totalPages = Math.ceil(data.total / limit);
 
-  const SortHead = ({ field, label }: { field: string; label: string }) => (
-    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => toggleSort(field)}>
-      <span className="inline-flex items-center gap-1">
-        {label}
-        {sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}
-      </span>
-    </TableHead>
-  );
+  // Column resize
+  const onDragStart = (field: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const th = (e.currentTarget as HTMLElement).closest("th") as HTMLElement;
+    const startWidth = th.offsetWidth;
+    dragRef.current = { field, startX: e.clientX, startWidth };
+    setIsTableFixed(true);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const diff = ev.clientX - dragRef.current.startX;
+      colWidthsRef.current[dragRef.current.field] = Math.max(40, dragRef.current.startWidth + diff);
+      setColTick((t) => t + 1);
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
+  const onAutoFit = (field: string) => {
+    const table = document.querySelector('[data-slot="table"]');
+    if (!table) return;
+    const headerTh = table.querySelector(`th[data-field="${field}"]`) as HTMLElement | null;
+    if (!headerTh) return;
+    const allTh = Array.from(table.querySelectorAll("thead tr th"));
+    const idx = allTh.indexOf(headerTh);
+    if (idx === -1) return;
+    let maxW = 0;
+    for (const cell of [headerTh, ...table.querySelectorAll("tbody tr")]) {
+      const el = idx === 0 ? (cell as HTMLElement) : ((cell as HTMLElement).querySelectorAll("td")[idx] as HTMLElement | undefined);
+      if (!el) continue;
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.style.cssText = "position:fixed;top:-9999px;left:-9999px;visibility:hidden;width:auto;height:auto;white-space:nowrap";
+      document.body.appendChild(clone);
+      maxW = Math.max(maxW, clone.scrollWidth);
+      document.body.removeChild(clone);
+    }
+    colWidthsRef.current[field] = Math.ceil(maxW) + 4;
+    setColTick((t) => t + 1);
+  };
+
+  const SortHead = ({ field, label, className }: { field: string; label: string; className?: string }) => {
+    const width = colWidthsRef.current[field];
+    return (
+      <TableHead data-field={field} className={`cursor-pointer hover:bg-muted/50 select-none relative ${className ?? ""}`} onClick={() => toggleSort(field)} style={width ? { width, minWidth: 40 } : undefined}>
+        <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
+        <div
+          className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 z-10"
+          onMouseDown={(e) => { e.stopPropagation(); onDragStart(field, e); }}
+          onClick={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => { e.stopPropagation(); onAutoFit(field); }}
+        />
+      </TableHead>
+    );
+  };
 
   // Client-side sort for parts count (aggregation field)
   const sortedData = { ...data };
@@ -132,32 +192,28 @@ export default function MachinesPage() {
       ) : (
         <>
           <div className="hidden md:block">
-            <Table>
+            <Table className={isTableFixed ? "table-fixed" : ""}>
               <TableHeader>
                 <TableRow>
                   <SortHead field="machineSn" label="整机SN" />
                   <SortHead field="manufacturerSn" label="厂商SN" />
-                  <SortHead field="product" label="产品" />
+                  <SortHead field="product" label="产品" className="max-w-[200px]" />
                   <SortHead field="modelCode" label="型号代码" />
                   <SortHead field="manufacturer" label="厂商" />
-                  <SortHead field="project" label="项目" />
+                  <SortHead field="project" label="项目" className="max-w-[200px]" />
                   <SortHead field="parts" label="部件数" />
-                  <TableHead>操作</TableHead>
+                  <TableHead className="relative">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(sort === "parts" ? sortedData.machines : data.machines).map((m) => (
                   <TableRow key={m.id}>
-                    <TableCell className="font-mono text-sm">
-                      <Link href={`/machines/${m.id}`} className="hover:underline">{m.machineSn}</Link>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{m.manufacturerSn ?? "-"}</TableCell>
-                    <TableCell>{m.product ?? "-"}</TableCell>
-                    <TableCell className="text-muted-foreground">{m.modelCode ?? "-"}</TableCell>
-                    <TableCell>{m.manufacturer ?? "-"}</TableCell>
-                    <TableCell>
-                      <Link href={`/projects`} className="text-sm hover:underline">{m.project.name}</Link>
-                    </TableCell>
+                    <TableCell className="font-mono text-sm"><div className="truncate" title={m.machineSn}><Link href={`/machines/${m.id}`} className="hover:underline">{m.machineSn}</Link></div></TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground max-w-[180px]"><div className="truncate" title={m.manufacturerSn ?? ""}>{m.manufacturerSn ?? "-"}</div></TableCell>
+                    <TableCell className="max-w-[200px]"><div className="truncate" title={m.product ?? ""}>{m.product ?? "-"}</div></TableCell>
+                    <TableCell className="text-muted-foreground"><div className="truncate" title={m.modelCode ?? ""}>{m.modelCode ?? "-"}</div></TableCell>
+                    <TableCell><div className="truncate" title={m.manufacturer ?? ""}>{m.manufacturer ?? "-"}</div></TableCell>
+                    <TableCell className="max-w-[200px]"><div className="truncate" title={m.project.name}><Link href={`/projects`} className="text-sm hover:underline">{m.project.name}</Link></div></TableCell>
                     <TableCell><Badge variant="secondary">{m._count.parts}</Badge></TableCell>
                     <TableCell>
                       <div className="flex gap-1">
