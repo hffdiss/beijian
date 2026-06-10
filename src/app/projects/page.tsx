@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ProjectFormDialog } from "@/components/project-form-dialog";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { TableSkeleton } from "@/components/skeleton";
+import { Pagination } from "@/components/pagination";
 import { useToast } from "@/components/toast";
 
 interface Project {
@@ -34,6 +35,8 @@ export default function ProjectsPage() {
   const [dir, setDir] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(true);
   const [isTableFixed, setIsTableFixed] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
   const toggleSort = (field: SortField) => {
     if (sort === field) setDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -94,6 +97,10 @@ export default function ProjectsPage() {
     if (days <= 90) return "text-amber-600";
     return "";
   };
+
+  const displayProjects = projects.slice((page - 1) * limit, page * limit);
+  const totalPages = Math.ceil(projects.length / limit);
+  useEffect(() => { setPage(1); }, [q, sort, dir]);
 
   const colWidthsRef = useRef<Record<string, number>>({});
   const dragRef = useRef<{ field: string; startX: number; startWidth: number } | null>(null);
@@ -189,7 +196,7 @@ export default function ProjectsPage() {
       </div>
 
       {loading ? (
-        <TableSkeleton rows={8} cols={8} />
+        <TableSkeleton rows={limit > 10 ? 10 : limit} cols={8} />
       ) : (
         <>
           <div className="hidden md:block">
@@ -207,7 +214,7 @@ export default function ProjectsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {projects.map((p) => (
+                {displayProjects.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell>
                       <div className="truncate" title={p.name}>
@@ -235,7 +242,7 @@ export default function ProjectsPage() {
           </div>
 
           <div className="md:hidden space-y-3">
-            {projects.map((p) => (
+            {displayProjects.map((p) => (
               <Card key={p.id}>
                 <CardContent className="p-4">
                   <Link href={`/projects/${p.id}`} className="font-semibold hover:underline">{p.name}</Link>
@@ -250,6 +257,9 @@ export default function ProjectsPage() {
           </div>
 
           {projects.length === 0 && <p className="text-center text-muted-foreground py-12">暂无项目</p>}
+
+          <Pagination page={page} totalPages={totalPages} total={projects.length} limit={limit}
+            onPageChange={setPage} onLimitChange={(l) => { setLimit(l); setPage(1); }} />
         </>
       )}
 
