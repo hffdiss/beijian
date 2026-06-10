@@ -185,12 +185,17 @@ export default function PartsPage() {
     const allTh = Array.from(table.querySelectorAll("thead tr th"));
     const idx = allTh.indexOf(headerTh);
     if (idx === -1) return;
-    let maxW = headerTh.scrollWidth;
-    table.querySelectorAll("tbody tr").forEach((row) => {
-      const td = (row as HTMLElement).querySelectorAll("td")[idx] as HTMLElement | undefined;
-      if (td) maxW = Math.max(maxW, td.scrollWidth);
-    });
-    colWidthsRef.current[field] = Math.ceil(maxW) + 8;
+    let maxW = 0;
+    for (const cell of [headerTh, ...table.querySelectorAll("tbody tr")]) {
+      const el = idx === 0 ? (cell as HTMLElement) : ((cell as HTMLElement).querySelectorAll("td")[idx] as HTMLElement | undefined);
+      if (!el) continue;
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.style.cssText = "position:fixed;top:-9999px;left:-9999px;visibility:hidden;width:auto;height:auto;white-space:nowrap";
+      document.body.appendChild(clone);
+      maxW = Math.max(maxW, clone.scrollWidth);
+      document.body.removeChild(clone);
+    }
+    colWidthsRef.current[field] = Math.ceil(maxW) + 4;
     setColTick((t) => t + 1);
   };
 
