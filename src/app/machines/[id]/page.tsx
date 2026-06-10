@@ -40,21 +40,21 @@ export default function MachineDetailPage() {
   const [form, setForm] = useState({
     machineSn: "", manufacturerSn: "", product: "", modelCode: "", manufacturer: "", projectId: "",
   });
-
-  const load = () => {
-    fetch(`/api/machines/${id}`).then((r) => r.json()).then((data) => {
-      setMachine(data);
-      setForm({
-        machineSn: data.machineSn ?? "", manufacturerSn: data.manufacturerSn ?? "",
-        product: data.product ?? "", modelCode: data.modelCode ?? "",
-        manufacturer: data.manufacturer ?? "", projectId: data.project?.id ?? "",
-      });
-    });
-  };
+  const [refLoaded, setRefLoaded] = useState(false);
 
   useEffect(() => {
-    load();
-    fetch("/api/projects").then((r) => r.json()).then(setProjects);
+    setRefLoaded(false);
+    Promise.all([
+      fetch(`/api/machines/${id}`).then((r) => r.json()).then((data) => {
+        setMachine(data);
+        setForm({
+          machineSn: data.machineSn ?? "", manufacturerSn: data.manufacturerSn ?? "",
+          product: data.product ?? "", modelCode: data.modelCode ?? "",
+          manufacturer: data.manufacturer ?? "", projectId: data.project?.id ?? "",
+        });
+      }),
+      fetch("/api/projects").then((r) => r.json()).then(setProjects),
+    ]).then(() => setRefLoaded(true));
   }, [id]);
 
   const handleSave = async () => {
@@ -67,7 +67,14 @@ export default function MachineDetailPage() {
       });
       if (!res.ok) { const err = await res.json(); toast.error(err.error);; return; }
       setEditing(false);
-      load();
+      // Reload machine data
+      const updated = await res.json();
+      setMachine(updated);
+      setForm({
+        machineSn: updated.machineSn ?? "", manufacturerSn: updated.manufacturerSn ?? "",
+        product: updated.product ?? "", modelCode: updated.modelCode ?? "",
+        manufacturer: updated.manufacturer ?? "", projectId: updated.project?.id ?? "",
+      });
     } catch { toast.error("保存失败"); }
     finally { setSaving(false); }
   };
@@ -104,7 +111,7 @@ export default function MachineDetailPage() {
         )}
       </div>
 
-      {editing && (
+      {editing && refLoaded ? (
         <Card className="mb-6 border-primary/50">
           <CardHeader><CardTitle className="text-base">编辑机器信息</CardTitle></CardHeader>
           <CardContent>
@@ -117,7 +124,7 @@ export default function MachineDetailPage() {
               <div>
                 <label className="text-sm font-medium">所属项目</label>
                 <Select value={form.projectId} onValueChange={(v) => setForm({ ...form, projectId: v ?? "" })}>
-                  <SelectTrigger><SelectValue placeholder="选择项目" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="选择项目">{(v: string) => v ? projects.find(p => p.id === v)?.name ?? v : null}</SelectValue></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">无</SelectItem>
                     {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
@@ -127,7 +134,7 @@ export default function MachineDetailPage() {
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : editing ? <div className="mb-6 p-4 text-center text-muted-foreground text-sm">加载中...</div> : null}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card>
