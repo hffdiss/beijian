@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,11 @@ export default function PartsPage() {
   const [visibleCols, setVisibleCols] = useState(new Set(COLUMNS.filter((c) => c.default).map((c) => c.key)));
   const [showColPicker, setShowColPicker] = useState(false);
   const [savedViews, setSavedViews] = useState<{ name: string; params: Record<string, string> }[]>([]);
+  const [isTableFixed, setIsTableFixed] = useState(false);
+  const colWidthsRef = useRef<Record<string, number>>({});
+  const dragRef = useRef<{ field: string; startX: number; startWidth: number } | null>(null);
+  type Tick = number;
+  const [, setColTick] = useState<Tick>(0);
 
   const buildParams = (prefix: string) => {
     const p: Record<string, string> = {};
@@ -144,6 +149,64 @@ export default function PartsPage() {
     else if (field === "spareWarehouse") setSpareWarehouse(value);
     else if (field === "isSpare") setIsSpare(value);
     setPage(1);
+  };
+
+  const onDragStart = (field: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const th = (e.currentTarget as HTMLElement).closest("th") as HTMLElement;
+    const startWidth = th.offsetWidth;
+    dragRef.current = { field, startX: e.clientX, startWidth };
+    setIsTableFixed(true);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const diff = ev.clientX - dragRef.current.startX;
+      colWidthsRef.current[dragRef.current.field] = Math.max(40, dragRef.current.startWidth + diff);
+      setColTick((t) => t + 1);
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
+  const onAutoFit = (field: string) => {
+    const table = document.querySelector('[data-slot="table"]');
+    if (!table) return;
+    const headerTh = table.querySelector(`th[data-field="${field}"]`) as HTMLElement | null;
+    if (!headerTh) return;
+    const allTh = Array.from(table.querySelectorAll("thead tr th"));
+    const idx = allTh.indexOf(headerTh);
+    if (idx === -1) return;
+    let maxW = headerTh.scrollWidth;
+    table.querySelectorAll("tbody tr").forEach((row) => {
+      const td = (row as HTMLElement).querySelectorAll("td")[idx] as HTMLElement | undefined;
+      if (td) maxW = Math.max(maxW, td.scrollWidth);
+    });
+    colWidthsRef.current[field] = Math.ceil(maxW) + 8;
+    setColTick((t) => t + 1);
+  };
+
+  const ResizableTh = ({ field, label, className }: { field: string; label: string; className?: string }) => {
+    const width = colWidthsRef.current[field];
+    return (
+      <TableHead data-field={field} className={`relative select-none ${className ?? ""}`} style={width ? { width, minWidth: 40 } : undefined}>
+        {label}
+        <div
+          className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 z-10"
+          onMouseDown={(e) => { e.stopPropagation(); onDragStart(field, e); }}
+          onClick={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => { e.stopPropagation(); onAutoFit(field); }}
+        />
+      </TableHead>
+    );
   };
 
   return (
@@ -264,31 +327,31 @@ export default function PartsPage() {
       ) : (
         <>
           <div className="hidden md:block">
-            <Table>
+            <Table className={isTableFixed ? "table-fixed" : ""}>
               <TableHeader>
                 <TableRow>
-                  {visibleCols.has("partSn") && <TableHead>部件SN</TableHead>}
-                  {visibleCols.has("description") && <TableHead>描述</TableHead>}
-                  {visibleCols.has("model") && <TableHead>型号</TableHead>}
-                  {visibleCols.has("project") && <TableHead>项目</TableHead>}
-                  {visibleCols.has("machine") && <TableHead>机器SN</TableHead>}
-                  {visibleCols.has("isSpare") && <TableHead>备件</TableHead>}
-                  {visibleCols.has("spareStatus") && <TableHead>状态</TableHead>}
-                  {visibleCols.has("spareWarehouse") && <TableHead>库房</TableHead>}
-                  <TableHead>操作</TableHead>
+                  {visibleCols.has("partSn") && <ResizableTh field="partSn" label="部件SN" />}
+                  {visibleCols.has("description") && <ResizableTh field="description" label="描述" />}
+                  {visibleCols.has("model") && <ResizableTh field="model" label="型号" />}
+                  {visibleCols.has("project") && <ResizableTh field="project" label="项目" />}
+                  {visibleCols.has("machine") && <ResizableTh field="machine" label="机器SN" />}
+                  {visibleCols.has("isSpare") && <ResizableTh field="isSpare" label="备件" />}
+                  {visibleCols.has("spareStatus") && <ResizableTh field="spareStatus" label="状态" />}
+                  {visibleCols.has("spareWarehouse") && <ResizableTh field="spareWarehouse" label="库房" />}
+                  <TableHead className="relative">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.parts.map((p) => (
                   <TableRow key={p.id}>
-                    {visibleCols.has("partSn") && <TableCell className="font-mono text-sm"><Link href={`/parts/${p.id}`} className="hover:underline">{p.partSn}</Link></TableCell>}
-                    {visibleCols.has("description") && <TableCell className="max-w-[200px] truncate">{p.description ?? "-"}</TableCell>}
-                    {visibleCols.has("model") && <TableCell className="text-muted-foreground">{p.model ?? "-"}</TableCell>}
-                    {visibleCols.has("project") && <TableCell className="text-sm">{p.project?.name ?? "-"}</TableCell>}
-                    {visibleCols.has("machine") && <TableCell className="font-mono text-xs text-muted-foreground">{p.machine?.machineSn ?? "-"}</TableCell>}
-                    {visibleCols.has("isSpare") && <TableCell>{p.isSpare ? <Badge>是</Badge> : <Badge variant="outline">否</Badge>}</TableCell>}
+                    {visibleCols.has("partSn") && <TableCell className="font-mono text-sm"><div className="truncate"><Link href={`/parts/${p.id}`} className="hover:underline">{p.partSn}</Link></div></TableCell>}
+                    {visibleCols.has("description") && <TableCell className="text-muted-foreground"><div className="truncate">{p.description ?? "-"}</div></TableCell>}
+                    {visibleCols.has("model") && <TableCell className="text-muted-foreground"><div className="truncate">{p.model ?? "-"}</div></TableCell>}
+                    {visibleCols.has("project") && <TableCell className="text-sm"><div className="truncate">{p.project?.name ?? "-"}</div></TableCell>}
+                    {visibleCols.has("machine") && <TableCell className="font-mono text-xs text-muted-foreground"><div className="truncate">{p.machine?.machineSn ?? "-"}</div></TableCell>}
+                    {visibleCols.has("isSpare") && <TableCell><div className="truncate">{p.isSpare ? <Badge>是</Badge> : <Badge variant="outline">否</Badge>}</div></TableCell>}
                     {visibleCols.has("spareStatus") && <TableCell><Badge variant={p.spareStatus === "NG" ? "destructive" : "secondary"}>{p.spareStatus ?? "-"}</Badge></TableCell>}
-                    {visibleCols.has("spareWarehouse") && <TableCell className="text-muted-foreground text-sm">{p.spareWarehouse ?? "-"}</TableCell>}
+                    {visibleCols.has("spareWarehouse") && <TableCell className="text-muted-foreground text-sm"><div className="truncate">{p.spareWarehouse ?? "-"}</div></TableCell>}
                     <TableCell>
                       <div className="flex gap-1">
                         <Link href={`/parts/${p.id}`}><Button variant="ghost" size="sm">编辑</Button></Link>
