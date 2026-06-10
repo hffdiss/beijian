@@ -110,7 +110,6 @@ export default function ProjectsPage() {
       const diff = ev.clientX - dragRef.current.startX;
       const newWidth = Math.max(60, dragRef.current.startWidth + diff);
       colWidthsRef.current[dragRef.current.field] = newWidth;
-      // Force re-render
       setColTick((t) => t + 1);
     };
     const onUp = () => {
@@ -124,17 +123,37 @@ export default function ProjectsPage() {
     document.addEventListener("mouseup", onUp);
   };
 
+  const onAutoFit = (field: string) => {
+    const table = document.querySelector('[data-slot="table"]');
+    if (!table) return;
+    const headerTh = table.querySelector(`th[data-field="${field}"]`) as HTMLElement | null;
+    if (!headerTh) return;
+    const allTh = Array.from(table.querySelectorAll("thead tr th"));
+    const idx = allTh.indexOf(headerTh);
+    if (idx === -1) return;
+    let maxW = headerTh.scrollWidth;
+    table.querySelectorAll("tbody tr").forEach((row) => {
+      const td = (row as HTMLElement).querySelectorAll("td")[idx] as HTMLElement | undefined;
+      if (td) maxW = Math.max(maxW, td.scrollWidth);
+    });
+    const padded = Math.ceil(maxW) + 8;
+    colWidthsRef.current[field] = padded;
+    setColTick((t) => t + 1);
+  };
+
   type Tick = number;
   const [, setColTick] = useState<Tick>(0);
 
   const SortHead = ({ field, label }: { field: SortField; label: string }) => {
     const width = colWidthsRef.current[field];
     return (
-      <TableHead className="cursor-pointer hover:bg-muted/50 select-none relative" onClick={() => toggleSort(field)} style={width ? { width, minWidth: 60 } : undefined}>
+      <TableHead data-field={field} className="cursor-pointer hover:bg-muted/50 select-none relative" onClick={() => toggleSort(field)} style={width ? { width, minWidth: 60 } : undefined}>
         <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
         <div
           className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 z-10"
-          onMouseDown={(e) => onDragStart(field, e)}
+          onMouseDown={(e) => { e.stopPropagation(); onDragStart(field, e); }}
+          onClick={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => { e.stopPropagation(); onAutoFit(field); }}
         />
       </TableHead>
     );
