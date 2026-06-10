@@ -128,6 +128,16 @@ export default function ProjectsPage() {
         <>
           <div className="hidden md:block">
             <Table>
+              <colgroup>
+                <col className="w-[30%]" />
+                <col className="w-[12%]" />
+                <col className="w-[16%]" />
+                <col className="w-[10%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[10%]" />
+                <col className="w-[6%]" />
+              </colgroup>
               <TableHeader>
                 <TableRow>
                   <SortHead field="name" label="项目名称" />
