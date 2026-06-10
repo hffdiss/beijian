@@ -33,6 +33,7 @@ export default function ProjectsPage() {
   const [sort, setSort] = useState<SortField>("name");
   const [dir, setDir] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(true);
+  const [isTableFixed, setIsTableFixed] = useState(false);
 
   const toggleSort = (field: SortField) => {
     if (sort === field) setDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -102,13 +103,14 @@ export default function ProjectsPage() {
     const th = (e.currentTarget as HTMLElement).closest("th") as HTMLElement;
     const startWidth = th.offsetWidth;
     dragRef.current = { field, startX: e.clientX, startWidth };
+    setIsTableFixed(true);
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
 
     const onMove = (ev: MouseEvent) => {
       if (!dragRef.current) return;
       const diff = ev.clientX - dragRef.current.startX;
-      const newWidth = Math.max(60, dragRef.current.startWidth + diff);
+      const newWidth = Math.max(40, dragRef.current.startWidth + diff);
       colWidthsRef.current[dragRef.current.field] = newWidth;
       setColTick((t) => t + 1);
     };
@@ -147,7 +149,7 @@ export default function ProjectsPage() {
   const SortHead = ({ field, label }: { field: SortField; label: string }) => {
     const width = colWidthsRef.current[field];
     return (
-      <TableHead data-field={field} className="cursor-pointer hover:bg-muted/50 select-none relative" onClick={() => toggleSort(field)} style={width ? { width, minWidth: 60 } : undefined}>
+      <TableHead data-field={field} className="cursor-pointer hover:bg-muted/50 select-none relative" onClick={() => toggleSort(field)} style={width ? { width, minWidth: 40 } : undefined}>
         <span className="inline-flex items-center gap-1">{label}{sort === field && <span className="text-xs">{dir === "asc" ? "▲" : "▼"}</span>}</span>
         <div
           className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 z-10"
@@ -186,7 +188,7 @@ export default function ProjectsPage() {
       ) : (
         <>
           <div className="hidden md:block">
-            <Table>
+            <Table className={isTableFixed ? "table-fixed" : ""}>
               <TableHeader>
                 <TableRow>
                   <SortHead field="name" label="项目名称" />
