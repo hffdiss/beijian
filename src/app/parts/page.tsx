@@ -336,7 +336,7 @@ export default function PartsPage() {
               <TableHeader>
                 <TableRow>
                   {visibleCols.has("partSn") && <ResizableTh field="partSn" label="部件SN" />}
-                  {visibleCols.has("description") && <ResizableTh field="description" label="描述" />}
+                  {visibleCols.has("description") && <ResizableTh field="description" label="描述" className="max-w-[300px]" />}
                   {visibleCols.has("model") && <ResizableTh field="model" label="型号" />}
                   {visibleCols.has("project") && <ResizableTh field="project" label="项目" />}
                   {visibleCols.has("machine") && <ResizableTh field="machine" label="机器SN" />}
@@ -350,7 +350,7 @@ export default function PartsPage() {
                 {data.parts.map((p) => (
                   <TableRow key={p.id}>
                     {visibleCols.has("partSn") && <TableCell className="font-mono text-sm"><div className="truncate"><Link href={`/parts/${p.id}`} className="hover:underline">{p.partSn}</Link></div></TableCell>}
-                    {visibleCols.has("description") && <TableCell className="text-muted-foreground"><div className="truncate">{p.description ?? "-"}</div></TableCell>}
+                    {visibleCols.has("description") && <TableCell className="text-muted-foreground max-w-[300px]"><div className="truncate">{p.description ?? "-"}</div></TableCell>}
                     {visibleCols.has("model") && <TableCell className="text-muted-foreground"><div className="truncate">{p.model ?? "-"}</div></TableCell>}
                     {visibleCols.has("project") && <TableCell className="text-sm"><div className="truncate">{p.project?.name ?? "-"}</div></TableCell>}
                     {visibleCols.has("machine") && <TableCell className="font-mono text-xs text-muted-foreground"><div className="truncate">{p.machine?.machineSn ?? "-"}</div></TableCell>}
