@@ -1,5 +1,15 @@
 {
+  "model": "haiku",
+  "enabledPlugins": {
+    "superpowers@superpowers-dev": true
+  },
   "extraKnownMarketplaces": {
+    "superpowers-dev": {
+      "source": {
+        "source": "directory",
+        "path": "@@CLAUDE_DIR@@/plugins/superpowers"
+      }
+    },
     "karpathy-skills": {
       "source": {
         "source": "github",
@@ -13,5 +23,27 @@
       }
     }
   },
-  "theme": "dark"
+  "theme": "dark",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claudefy pull --quiet"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "nohup claudefy push --quiet >/dev/null 2>&1 &"
+          }
+        ]
+      }
+    ]
+  }
 }
