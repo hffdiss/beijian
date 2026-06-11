@@ -18,8 +18,8 @@ RUN npm run build
 # ── Production stage ──
 FROM node:22-alpine AS runner
 
-# better-sqlite3 needs these at runtime
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ && \
+    npm install -g tsx
 
 WORKDIR /app
 ENV NODE_ENV=production
@@ -29,21 +29,20 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+
+# Prisma schema + generated client (needed for db push + seed)
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/src/generated ./src/generated
 
-# better-sqlite3 native binary is NOT bundled by Next standalone output.
-# We must rebuild it in the runner stage.
-COPY --from=builder /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/package.json ./package.json
+# Copy full node_modules (preserves natively compiled binaries)
+COPY --from=builder /app/node_modules ./node_modules
+RUN npm prune --omit=dev 2>/dev/null || true
 
-# Rebuild native addon for current platform
-RUN cd node_modules/better-sqlite3 && npm run build-release 2>/dev/null || true
+# Entrypoint for db init
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Reinstall only production deps to ensure native builds
-RUN npm install --omit=dev 2>/dev/null || true
-
-# Optional: copy import file and backups directory
+# Optional: import file
 COPY --from=builder /app/beijian.xlsx ./beijian.xlsx
 
 RUN mkdir -p prisma backups
@@ -52,4 +51,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-CMD ["node", "server.js"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD []

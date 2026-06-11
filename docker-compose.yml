@@ -8,10 +8,10 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URL=file:./prisma/dev.db
-      - JWT_SECRET=change-this-to-a-random-secret
+      - JWT_SECRET=${JWT_SECRET:-change-this-to-a-random-secret}
     volumes:
-      # Persistent database and backups
-      - ./data/prisma:/app/prisma
+      # Persist only the database file (not the whole prisma dir, to keep schema/seed from image)
+      - ./data/dev.db:/app/prisma/dev.db
       - ./data/backups:/app/backups
       # Import file (optional)
       - ./beijian.xlsx:/app/beijian.xlsx:ro
