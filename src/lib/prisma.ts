@@ -5,7 +5,6 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient(): PrismaClient {
-  const url = process.env.DATABASE_URL ?? "";
   const url = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
   const isSQLite = url.startsWith("file:");
 
