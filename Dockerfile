@@ -14,6 +14,8 @@ RUN npm ci
 
 # Copy source and build
 COPY . .
+# Ensure optional import file exists for the runner stage
+RUN touch beijian.xlsx
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
