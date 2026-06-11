@@ -5,14 +5,16 @@ RUN apt-get update && apt-get install -y python3 make g++ --no-install-recommend
 
 WORKDIR /app
 
-# Install all deps (including devDeps for prisma generate)
-COPY package.json package-lock.json ./
+# Copy package files + prisma schema first (postinstall runs prisma generate)
+COPY package.json package-lock.json prisma.config.ts ./
+COPY prisma/schema.prisma prisma/
+
+# Install all deps (postinstall's prisma generate needs schema)
 RUN npm ci
 
 # Copy source and build
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npx prisma generate
 RUN npm run build
 
 # ── Production stage ──
