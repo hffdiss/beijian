@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 备品备件管理系统
 
-## Getting Started
-
-First, run the development server:
+## 本地开发
 
 ```bash
+# 安装依赖
+npm install
+
+# 生成 Prisma client
+npx prisma generate
+
+# 初始化数据库
+npx prisma db push
+
+# 创建默认管理员账户 (admin / admin123)
+npx tsx prisma/seed.ts
+
+# 启动开发服务器
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+访问 http://localhost:3000，默认管理员账号 `admin` / `admin123`。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Docker 部署
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 首次部署
 
-## Learn More
+```bash
+# 生成随机 JWT 密钥
+echo "JWT_SECRET=$(openssl rand -hex 32)" > .env
 
-To learn more about Next.js, take a look at the following resources:
+# 构建并启动
+docker compose up -d --build
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 查看日志
+docker compose logs -f
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 后续更新
 
-## Deploy on Vercel
+```bash
+git pull
+docker compose up -d --build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 数据持久化
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- SQLite 数据库文件保存在 `./data/dev.db`
+- 备份目录 `./data/backups/`
+
+### 环境变量
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `JWT_SECRET` | JWT 签名密钥 | `change-this-to-a-random-secret` |
+| `DATABASE_URL` | 数据库路径 | `file:./prisma/dev.db` |
+
+数据库初始化（建表 + 种子数据）在容器启动时自动执行，无需手动操作。
