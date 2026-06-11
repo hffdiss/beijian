@@ -1,7 +1,7 @@
-FROM node:22-alpine AS builder
+FROM node:22-slim AS builder
 
 # Install build tools for better-sqlite3 native compilation
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y python3 make g++ --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -16,9 +16,9 @@ RUN npx prisma generate
 RUN npm run build
 
 # ── Production stage ──
-FROM node:22-alpine AS runner
+FROM node:22-slim AS runner
 
-RUN apk add --no-cache python3 make g++ && \
+RUN apt-get update && apt-get install -y python3 make g++ --no-install-recommends && rm -rf /var/lib/apt/lists/* && \
     npm install -g tsx
 
 WORKDIR /app
