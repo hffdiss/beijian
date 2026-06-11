@@ -5,10 +5,10 @@ services:
     container_name: beijian
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
-      - DATABASE_URL=file:./prisma/dev.db
-      - JWT_SECRET=${JWT_SECRET:-change-this-to-a-random-secret}
+      - DATABASE_URL=file:/app/prisma/dev.db
+      - JWT_SECRET=admin123
     volumes:
       # Persist only the database file (not the whole prisma dir, to keep schema/seed from image)
       - ./data/dev.db:/app/prisma/dev.db
