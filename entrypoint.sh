@@ -5,7 +5,7 @@ cd /app
 
 # Create/migrate database tables
 echo "→ Running prisma db push..."
-npx prisma db push --skip-generate
+npx prisma db push
 echo "✓ Database schema ready"
 
 # Seed default admin user (idempotent)
