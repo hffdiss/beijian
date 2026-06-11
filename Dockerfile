@@ -34,8 +34,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Prisma schema + generated client (needed for db push + seed)
+# Prisma schema + config + generated client (needed for db push + seed)
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/src/generated ./src/generated
 
 # Copy full node_modules (preserves natively compiled binaries)
