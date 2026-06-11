@@ -1,5 +1,29 @@
 {
   "model": "haiku",
+  "enabledPlugins": {
+    "superpowers@superpowers-dev": true
+  },
+  "extraKnownMarketplaces": {
+    "superpowers-dev": {
+      "source": {
+        "source": "directory",
+        "path": "@@CLAUDE_DIR@@/plugins/superpowers"
+      }
+    },
+    "karpathy-skills": {
+      "source": {
+        "source": "github",
+        "repo": "forrestchang/andrej-karpathy-skills"
+      }
+    },
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    }
+  },
+  "theme": "dark",
   "hooks": {
     "SessionStart": [
       {
@@ -21,29 +45,5 @@
         ]
       }
     ]
-  },
-  "enabledPlugins": {
-    "superpowers@superpowers-dev": true
-  },
-  "extraKnownMarketplaces": {
-    "karpathy-skills": {
-      "source": {
-        "source": "github",
-        "repo": "forrestchang/andrej-karpathy-skills"
-      }
-    },
-    "superpowers-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "obra/superpowers-marketplace"
-      }
-    },
-    "superpowers-dev": {
-      "source": {
-        "source": "directory",
-        "path": "@@CLAUDE_DIR@@/plugins/superpowers"
-      }
-    }
-  },
-  "theme": "dark"
+  }
 }
