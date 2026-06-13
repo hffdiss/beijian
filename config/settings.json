@@ -1,5 +1,27 @@
 {
-  "model": "haiku",
+  "model": "sonnet",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claudefy pull --quiet"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "nohup claudefy push --quiet >/dev/null 2>&1 &"
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "superpowers@superpowers-dev": true
   },
@@ -23,27 +45,5 @@
       }
     }
   },
-  "theme": "dark",
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "claudefy pull --quiet"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "nohup claudefy push --quiet >/dev/null 2>&1 &"
-          }
-        ]
-      }
-    ]
-  }
+  "theme": "dark"
 }
