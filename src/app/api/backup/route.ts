@@ -3,9 +3,15 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSy
 import { execSync } from "child_process";
 import path from "path";
 
-const BACKUP_DIR = path.join(process.cwd(), "backups");
-const DB_URL = process.env.DATABASE_URL ?? "";
+const BACKUP_DIR = path.join(process.cwd(), "data", "backups");
+const DB_URL = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
 const isMySQL = DB_URL.startsWith("mysql://");
+
+function getDbPath(): string {
+  // Extract path from DATABASE_URL (strip file: prefix for SQLite)
+  const raw = DB_URL.replace(/^file:/, "");
+  return path.resolve(process.cwd(), raw);
+}
 
 function getMySQLBackup(): Buffer {
   const url = new URL(DB_URL);
@@ -30,13 +36,13 @@ function restoreMySQL(sql: Buffer) {
 }
 
 function getSQLiteBackup(): Buffer {
-  const dbPath = path.join(process.cwd(), "prisma", "dev.db");
+  const dbPath = getDbPath();
   if (!existsSync(dbPath)) throw new Error("数据库文件不存在");
   return readFileSync(dbPath);
 }
 
 function restoreSQLite(buf: Buffer) {
-  const dbPath = path.join(process.cwd(), "prisma", "dev.db");
+  const dbPath = getDbPath();
   writeFileSync(dbPath, buf);
 }
 

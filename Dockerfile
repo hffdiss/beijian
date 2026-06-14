@@ -1,4 +1,5 @@
 FROM node:22-slim AS builder
+#FROM beijian-beijian:latest AS builder
 
 # Install build tools for better-sqlite3 native compilation
 RUN apt-get update && apt-get install -y python3 make g++ --no-install-recommends && rm -rf /var/lib/apt/lists/*
@@ -16,11 +17,16 @@ RUN npm ci
 COPY . .
 # Ensure optional import file exists for the runner stage
 RUN touch beijian.xlsx
+
+# Generate schema SQL for runtime init (avoids prisma db push engine URL issue)
+RUN npx prisma migrate diff --from-empty --to-schema=prisma/schema.prisma --script > prisma/schema.sql
+
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # ── Production stage ──
 FROM node:22-slim AS runner
+#FROM beijian-beijian:latest AS runner
 
 RUN apt-get update && apt-get install -y python3 make g++ --no-install-recommends && rm -rf /var/lib/apt/lists/* && \
     npm install -g tsx
@@ -50,7 +56,7 @@ RUN chmod +x /entrypoint.sh
 # Optional: import file
 COPY --from=builder /app/beijian.xlsx ./beijian.xlsx
 
-RUN mkdir -p prisma backups
+RUN mkdir -p prisma data
 
 EXPOSE 3000
 ENV PORT=3000

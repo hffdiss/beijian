@@ -53,6 +53,6 @@ docker compose up -d --build
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
 | `JWT_SECRET` | JWT 签名密钥 | `change-this-to-a-random-secret` |
-| `DATABASE_URL` | 数据库路径 | `file:./prisma/dev.db` |
+| `DATABASE_URL` | 数据库路径 | `file:./data/dev.db` |
 
 数据库初始化（建表 + 种子数据）在容器启动时自动执行，无需手动操作。

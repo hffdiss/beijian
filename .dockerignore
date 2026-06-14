@@ -8,3 +8,4 @@ tests
 .env.local
 backups
 test.db
+data
