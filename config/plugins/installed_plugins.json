@@ -15,12 +15,21 @@
     "superpowers@superpowers-marketplace": [
       {
         "scope": "project",
+        "projectPath": "D:\\project_cc\\beijian",
         "installPath": "@@CLAUDE_DIR@@\\plugins\\cache\\superpowers-marketplace\\superpowers\\5.1.0",
         "version": "5.1.0",
         "installedAt": "2026-05-27T08:26:13.493Z",
         "lastUpdated": "2026-05-27T08:26:13.493Z",
-        "gitCommitSha": "f2cbfbefebbfef77321e4c9abc9e949826bea9d7",
-        "projectPath": "D:\\project_cc\\beijian"
+        "gitCommitSha": "f2cbfbefebbfef77321e4c9abc9e949826bea9d7"
+      }
+    ],
+    "superpowers@superpowers-dev": [
+      {
+        "scope": "user",
+        "installPath": "@@CLAUDE_DIR@@/plugins/cache/superpowers-dev/superpowers/5.1.0",
+        "version": "5.1.0",
+        "installedAt": "2026-06-14T13:57:39.217Z",
+        "lastUpdated": "2026-06-14T13:57:39.217Z"
       }
     ]
   }
