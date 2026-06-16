@@ -1,49 +1,61 @@
 {
-  "model": "deepseek-v4-flash",
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "claudefy pull --quiet"
-          }
-        ]
+  "enabledPlugins": {
+    "superpowers@superpowers-dev": true
+  },
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "PROXY_MANAGED",
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15721",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL": "deepseek-v4-pro[1M]",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL_NAME": "deepseek-v4-pro",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME": "deepseek-v4-flash",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-8[1M]",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL_NAME": "deepseek-v4-pro",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-6[1M]",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL_NAME": "deepseek-v4-flash"
+  },
+  "extraKnownMarketplaces": {
+    "karpathy-skills": {
+      "source": {
+        "repo": "forrestchang/andrej-karpathy-skills",
+        "source": "github"
       }
-    ],
+    },
+    "superpowers-dev": {
+      "source": {
+        "path": "@@CLAUDE_DIR@@/plugins/superpowers",
+        "source": "directory"
+      }
+    },
+    "superpowers-marketplace": {
+      "source": {
+        "repo": "obra/superpowers-marketplace",
+        "source": "github"
+      }
+    }
+  },
+  "hooks": {
     "SessionEnd": [
       {
         "hooks": [
           {
-            "type": "command",
-            "command": "nohup claudefy push --quiet >/dev/null 2>&1 &"
+            "command": "nohup claudefy push --quiet >/dev/null 2>&1 &",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "claudefy pull --quiet",
+            "type": "command"
           }
         ]
       }
     ]
   },
-  "enabledPlugins": {
-    "superpowers@superpowers-dev": true
-  },
-  "extraKnownMarketplaces": {
-    "superpowers-dev": {
-      "source": {
-        "source": "directory",
-        "path": "@@CLAUDE_DIR@@/plugins/superpowers"
-      }
-    },
-    "karpathy-skills": {
-      "source": {
-        "source": "github",
-        "repo": "forrestchang/andrej-karpathy-skills"
-      }
-    },
-    "superpowers-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "obra/superpowers-marketplace"
-      }
-    }
-  },
+  "model": "deepseek-v4-flash",
   "theme": "dark"
 }
