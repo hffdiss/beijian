@@ -5,7 +5,7 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "@@CLAUDE_DIR@@\\plugins\\marketplaces\\claude-plugins-official",
-    "lastUpdated": "2026-06-16T15:25:32.376Z"
+    "lastUpdated": "2026-06-16T16:01:23.631Z"
   },
   "karpathy-skills": {
     "source": {
@@ -13,7 +13,7 @@
       "repo": "forrestchang/andrej-karpathy-skills"
     },
     "installLocation": "@@CLAUDE_DIR@@\\plugins\\marketplaces\\karpathy-skills",
-    "lastUpdated": "2026-06-16T15:27:10.410Z"
+    "lastUpdated": "2026-06-16T16:01:28.237Z"
   },
   "superpowers-marketplace": {
     "source": {
@@ -21,7 +21,7 @@
       "repo": "obra/superpowers-marketplace"
     },
     "installLocation": "@@CLAUDE_DIR@@\\plugins\\marketplaces\\superpowers-marketplace",
-    "lastUpdated": "2026-06-16T15:27:41.615Z"
+    "lastUpdated": "2026-06-16T16:01:32.916Z"
   },
   "superpowers-dev": {
     "source": {
